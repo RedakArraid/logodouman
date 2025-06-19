@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useStore, Product, Category } from '../contexts/StoreContext';
+import ImageUpload from '../components/ImageUpload';
 
 export default function AdminDashboard() {
   const {
@@ -32,6 +33,7 @@ export default function AdminDashboard() {
     price: 0,
     category: '',
     icon: '',
+    image: '',
     description: '',
     stock: 0
   });
@@ -40,6 +42,7 @@ export default function AdminDashboard() {
     id: '',
     name: '',
     icon: '',
+    image: '',
     description: ''
   });
 
@@ -51,6 +54,7 @@ export default function AdminDashboard() {
       price: 0,
       category: '',
       icon: '',
+      image: '',
       description: '',
       stock: 0
     });
@@ -64,6 +68,7 @@ export default function AdminDashboard() {
       price: product.price,
       category: product.category,
       icon: product.icon,
+      image: product.image || '',
       description: product.description,
       stock: product.stock || 0
     });
@@ -94,6 +99,7 @@ export default function AdminDashboard() {
       id: '',
       name: '',
       icon: '',
+      image: '',
       description: ''
     });
     setShowCategoryModal(true);
@@ -105,6 +111,7 @@ export default function AdminDashboard() {
       id: category.id,
       name: category.name,
       icon: category.icon,
+      image: category.image || '',
       description: category.description
     });
     setShowCategoryModal(true);
@@ -279,7 +286,22 @@ export default function AdminDashboard() {
                           <tr key={product.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="text-2xl">{product.icon}</div>
+                                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                  {product.image ? (
+                                    <img 
+                                      src={product.image} 
+                                      alt={product.name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className={`text-xl ${product.image ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                                    {product.icon}
+                                  </div>
+                                </div>
                                 <div>
                                   <p className="font-medium text-gray-900">{product.name}</p>
                                   <p className="text-sm text-gray-500">{product.description}</p>
@@ -357,7 +379,22 @@ export default function AdminDashboard() {
                     {categories.map((category) => (
                       <div key={category.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
-                          <div className="text-4xl">{category.icon}</div>
+                          <div className="w-16 h-16 bg-orange-100 rounded-xl overflow-hidden flex items-center justify-center">
+                            {category.image ? (
+                              <img 
+                                src={category.image} 
+                                alt={category.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div className={`text-2xl ${category.image ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                              {category.icon}
+                            </div>
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => toggleCategoryStatus(category.id)}
@@ -451,7 +488,16 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icône (emoji)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
+                  <ImageUpload
+                    currentImage={productForm.image}
+                    onImageChange={(imageUrl) => setProductForm({...productForm, image: imageUrl})}
+                    placeholder="Choisir une image de produit"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Icône de fallback (emoji)</label>
                   <input
                     type="text"
                     value={productForm.icon}
@@ -459,6 +505,7 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="🛍️"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Affiché si l'image ne se charge pas</p>
                 </div>
                 
                 <div>
@@ -537,7 +584,16 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icône (emoji)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image de la catégorie</label>
+                  <ImageUpload
+                    currentImage={categoryForm.image}
+                    onImageChange={(imageUrl) => setCategoryForm({...categoryForm, image: imageUrl})}
+                    placeholder="Choisir une image de catégorie"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Icône de fallback (emoji)</label>
                   <input
                     type="text"
                     value={categoryForm.icon}
@@ -545,6 +601,7 @@ export default function AdminDashboard() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="👗"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Affiché si l'image ne se charge pas</p>
                 </div>
                 
                 <div>

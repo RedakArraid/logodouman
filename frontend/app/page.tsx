@@ -178,9 +178,24 @@ export default function LogoDouman() {
                 <div
                   key={category.id}
                   onClick={() => setCurrentFilter(category.id)}
-                  className="bg-gradient-to-br from-orange-400 to-orange-500 text-black p-8 rounded-2xl text-center cursor-pointer hover:-translate-y-3 hover:shadow-2xl transition-all duration-300 border-2 border-orange-600/50 hover:border-orange-700 group"
+                  className="bg-gradient-to-br from-orange-400 to-orange-500 text-black p-8 rounded-2xl text-center cursor-pointer hover:-translate-y-3 hover:shadow-2xl transition-all duration-300 border-2 border-orange-600/50 hover:border-orange-700 group overflow-hidden"
                 >
-                  <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">{category.icon}</div>
+                  <div className="w-full h-32 mb-4 bg-white/10 rounded-xl overflow-hidden flex items-center justify-center">
+                    {category.image ? (
+                      <img 
+                        src={category.image} 
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`text-5xl ${category.image ? 'hidden' : 'flex'} items-center justify-center w-full h-full group-hover:scale-110 transition-transform duration-300`}>
+                      {category.icon}
+                    </div>
+                  </div>
                   <h3 className="text-xl font-bold mb-3 text-black">{category.name}</h3>
                   <p className="text-sm text-gray-800">{category.description}</p>
                 </div>
@@ -213,8 +228,22 @@ export default function LogoDouman() {
                   key={product.id}
                   className="bg-gradient-to-br from-orange-200 to-orange-300 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-orange-400 hover:border-orange-600/70 group"
                 >
-                  <div className="h-52 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center text-7xl text-white group-hover:scale-110 transition-transform duration-300">
-                    {product.icon}
+                  <div className="h-52 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                    {product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fallback vers emoji si image non disponible
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`text-7xl text-white flex items-center justify-center w-full h-full ${product.image ? 'hidden' : 'flex'}`}>
+                      {product.icon}
+                    </div>
                   </div>
                   <div className="p-6">
                     <h3 className="font-bold text-lg mb-3 text-black group-hover:text-orange-700 transition-colors">{product.name}</h3>

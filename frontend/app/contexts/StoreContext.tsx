@@ -9,6 +9,7 @@ export interface Product {
   price: number;
   category: string;
   icon: string;
+  image?: string; // URL de l'image du produit
   description: string;
   stock?: number;
   status?: 'active' | 'inactive';
@@ -18,6 +19,7 @@ export interface Category {
   id: string;
   name: string;
   icon: string;
+  image?: string; // URL de l'image de la catégorie
   description: string;
   productCount?: number;
   status?: 'active' | 'inactive';
@@ -49,6 +51,7 @@ const defaultProducts: Product[] = [
     price: 9500,
     category: "bags",
     icon: "👜",
+    image: "/images/products/sac-main-luxe.svg",
     description: "Sac élégant en cuir de qualité",
     stock: 15,
     status: 'active'
@@ -59,6 +62,7 @@ const defaultProducts: Product[] = [
     price: 12000,
     category: "fashion",
     icon: "👗",
+    image: "/images/products/robe-ete-elegante.svg",
     description: "Robe légère et tendance",
     stock: 8,
     status: 'active'
@@ -69,6 +73,7 @@ const defaultProducts: Product[] = [
     price: 8500,
     category: "electronics",
     icon: "🎧",
+    image: "/images/products/ecouteurs-sans-fil.svg",
     description: "Son de haute qualité",
     stock: 25,
     status: 'active'
@@ -79,6 +84,7 @@ const defaultProducts: Product[] = [
     price: 3500,
     category: "home",
     icon: "🛋️",
+    image: "/images/products/coussin-decoratif.svg",
     description: "Confort et style pour votre salon",
     stock: 12,
     status: 'active'
@@ -89,6 +95,7 @@ const defaultProducts: Product[] = [
     price: 15000,
     category: "electronics",
     icon: "⌚",
+    image: "/images/products/montre-connectee.svg",
     description: "Technologie et élégance",
     stock: 20,
     status: 'active'
@@ -99,6 +106,7 @@ const defaultProducts: Product[] = [
     price: 6500,
     category: "fashion",
     icon: "🧣",
+    image: "/images/products/echarpe-soie.svg",
     description: "Accessoire raffiné",
     stock: 10,
     status: 'active'
@@ -109,6 +117,7 @@ const defaultProducts: Product[] = [
     price: 7800,
     category: "home",
     icon: "💡",
+    image: "/images/products/lampe-design.svg",
     description: "Éclairage moderne",
     stock: 6,
     status: 'active'
@@ -119,6 +128,7 @@ const defaultProducts: Product[] = [
     price: 4200,
     category: "bags",
     icon: "💳",
+    image: "/images/products/portefeuille-cuir.svg",
     description: "Cuir véritable, design élégant",
     stock: 18,
     status: 'active'
@@ -130,6 +140,7 @@ const defaultCategories: Category[] = [
     id: 'fashion',
     name: 'Mode & Style',
     icon: '👗',
+    image: '/images/categories/fashion.svg',
     description: 'Vêtements tendance et accessoires',
     productCount: 0,
     status: 'active'
@@ -138,6 +149,7 @@ const defaultCategories: Category[] = [
     id: 'bags',
     name: 'Sacs & Maroquinerie',
     icon: '👜',
+    image: '/images/categories/bags.svg',
     description: 'Sacs à main, portefeuilles et plus',
     productCount: 0,
     status: 'active'
@@ -146,6 +158,7 @@ const defaultCategories: Category[] = [
     id: 'electronics',
     name: 'Électronique',
     icon: '📱',
+    image: '/images/categories/electronics.svg',
     description: 'Gadgets et accessoires tech',
     productCount: 0,
     status: 'active'
@@ -154,6 +167,7 @@ const defaultCategories: Category[] = [
     id: 'home',
     name: 'Maison & Déco',
     icon: '🏠',
+    image: '/images/categories/home.svg',
     description: 'Décoration et mobilier',
     productCount: 0,
     status: 'active'

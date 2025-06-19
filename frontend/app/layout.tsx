@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './styles.css'
+import { StoreProvider } from './contexts/StoreContext'
 
 export const metadata: Metadata = {
   title: 'LogoDouman - Plateforme E-commerce de Nouvelle Génération',
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body>
-        {children}
+        <StoreProvider>
+          {children}
+        </StoreProvider>
       </body>
     </html>
   )

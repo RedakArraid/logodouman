@@ -1,95 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useStore } from './contexts/StoreContext';
 
 // Types
-interface Product {
+interface CartItem {
   id: number;
   name: string;
   price: number;
   category: string;
   icon: string;
   description: string;
-}
-
-interface CartItem extends Product {
   quantity: number;
 }
 
 export default function LogoDouman() {
+  const { getActiveProducts, getActiveCategories } = useStore();
+  const products = getActiveProducts();
+  const categoryList = getActiveCategories();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [currentFilter, setCurrentFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-
-  // Données des produits
-  const products: Product[] = [
-    {
-      id: 1,
-      name: "Sac à main de luxe carré classique",
-      price: 9500,
-      category: "bags",
-      icon: "👜",
-      description: "Sac élégant en cuir de qualité"
-    },
-    {
-      id: 2,
-      name: "Robe d'été élégante",
-      price: 12000,
-      category: "fashion",
-      icon: "👗",
-      description: "Robe légère et tendance"
-    },
-    {
-      id: 3,
-      name: "Écouteurs sans fil",
-      price: 8500,
-      category: "electronics",
-      icon: "🎧",
-      description: "Son de haute qualité"
-    },
-    {
-      id: 4,
-      name: "Coussin décoratif",
-      price: 3500,
-      category: "home",
-      icon: "🛋️",
-      description: "Confort et style pour votre salon"
-    },
-    {
-      id: 5,
-      name: "Montre connectée",
-      price: 15000,
-      category: "electronics",
-      icon: "⌚",
-      description: "Technologie et élégance"
-    },
-    {
-      id: 6,
-      name: "Écharpe en soie",
-      price: 6500,
-      category: "fashion",
-      icon: "🧣",
-      description: "Accessoire raffiné"
-    },
-    {
-      id: 7,
-      name: "Lampe design",
-      price: 7800,
-      category: "home",
-      icon: "💡",
-      description: "Éclairage moderne"
-    },
-    {
-      id: 8,
-      name: "Portefeuille cuir",
-      price: 4200,
-      category: "bags",
-      icon: "💳",
-      description: "Cuir véritable, design élégant"
-    }
-  ];
 
   // Filtrer les produits
   const getFilteredProducts = () => {
@@ -195,6 +128,7 @@ export default function LogoDouman() {
               <a href="#home" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Accueil</a>
               <a href="#categories" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Catégories</a>
               <a href="#products" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Produits</a>
+              <a href="/admin" className="bg-orange-600 text-white hover:bg-orange-700 px-4 py-2 rounded-full transition-all duration-300 font-medium">⚙️ Admin</a>
             </div>
 
             {/* Cart Button */}
@@ -240,20 +174,15 @@ export default function LogoDouman() {
               Nos <span className="text-orange-700">Catégories</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { id: 'fashion', icon: '👗', title: 'Mode & Style', desc: 'Vêtements tendance et accessoires' },
-                { id: 'bags', icon: '👜', title: 'Sacs & Maroquinerie', desc: 'Sacs à main, portefeuilles et plus' },
-                { id: 'electronics', icon: '📱', title: 'Électronique', desc: 'Gadgets et accessoires tech' },
-                { id: 'home', icon: '🏠', title: 'Maison & Déco', desc: 'Décoration et mobilier' }
-              ].map((category) => (
+              {categoryList.map((category) => (
                 <div
                   key={category.id}
                   onClick={() => setCurrentFilter(category.id)}
                   className="bg-gradient-to-br from-orange-400 to-orange-500 text-black p-8 rounded-2xl text-center cursor-pointer hover:-translate-y-3 hover:shadow-2xl transition-all duration-300 border-2 border-orange-600/50 hover:border-orange-700 group"
                 >
                   <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">{category.icon}</div>
-                  <h3 className="text-xl font-bold mb-3 text-black">{category.title}</h3>
-                  <p className="text-sm text-gray-800">{category.desc}</p>
+                  <h3 className="text-xl font-bold mb-3 text-black">{category.name}</h3>
+                  <p className="text-sm text-gray-800">{category.description}</p>
                 </div>
               ))}
             </div>

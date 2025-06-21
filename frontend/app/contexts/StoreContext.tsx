@@ -28,6 +28,7 @@ export interface Category {
 interface StoreContextType {
   products: Product[];
   categories: Category[];
+  isHydrated: boolean;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: number, product: Partial<Product>) => void;
   deleteProduct: (id: number) => void;
@@ -43,93 +44,93 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// Données initiales par défaut
+// Données initiales par défaut - Sacs à main LogoDouman
 const defaultProducts: Product[] = [
   {
     id: 1,
-    name: "Sac à main de luxe carré classique",
-    price: 9500,
-    category: "bags",
+    name: "Sac à main verni brillant avec anneau de levage",
+    price: 15000,
+    category: "luxury",
     icon: "👜",
-    image: "/images/products/sac-main-luxe.svg",
-    description: "Sac élégant en cuir de qualité",
-    stock: 15,
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
+    description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
+    stock: 12,
     status: 'active'
   },
   {
     id: 2,
-    name: "Robe d'été élégante",
-    price: 12000,
-    category: "fashion",
-    icon: "👗",
-    image: "/images/products/robe-ete-elegante.svg",
-    description: "Robe légère et tendance",
+    name: "Sac imprimé géométrique vintage léger tendance",
+    price: 12500,
+    category: "vintage",
+    icon: "👜",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
+    description: "Sac tendance avec motifs géométriques vintage, léger et pratique pour un look moderne",
     stock: 8,
     status: 'active'
   },
   {
     id: 3,
-    name: "Écouteurs sans fil",
-    price: 8500,
-    category: "electronics",
-    icon: "🎧",
-    image: "/images/products/ecouteurs-sans-fil.svg",
-    description: "Son de haute qualité",
-    stock: 25,
+    name: "Sac à dos d'ordinateur résistant à l'eau antivol",
+    price: 18000,
+    category: "business",
+    icon: "🎒",
+    image: "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=400&h=400&fit=crop&crop=center",
+    description: "Sac à dos professionnel antivol avec protection contre l'eau pour ordinateur portable",
+    stock: 15,
     status: 'active'
   },
   {
     id: 4,
-    name: "Coussin décoratif",
-    price: 3500,
-    category: "home",
-    icon: "🛋️",
-    image: "/images/products/coussin-decoratif.svg",
-    description: "Confort et style pour votre salon",
-    stock: 12,
-    status: 'active'
-  },
-  {
-    id: 5,
-    name: "Montre connectée",
-    price: 15000,
-    category: "electronics",
-    icon: "⌚",
-    image: "/images/products/montre-connectee.svg",
-    description: "Technologie et élégance",
-    stock: 20,
-    status: 'active'
-  },
-  {
-    id: 6,
-    name: "Écharpe en soie",
-    price: 6500,
-    category: "fashion",
-    icon: "🧣",
-    image: "/images/products/echarpe-soie.svg",
-    description: "Accessoire raffiné",
+    name: "Sac à main imprimé rétro pour femmes",
+    price: 13500,
+    category: "retro",
+    icon: "👜",
+    image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop&crop=center",
+    description: "Design rétro avec imprimés tendance pour un look vintage moderne et sophistiqué",
     stock: 10,
     status: 'active'
   },
   {
+    id: 5,
+    name: "Sac à main de luxe cuir premium",
+    price: 25000,
+    category: "luxury",
+    icon: "👜",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
+    description: "Sac en cuir véritable premium, design exclusif et finitions haut de gamme artisanales",
+    stock: 5,
+    status: 'active'
+  },
+  {
+    id: 6,
+    name: "Sac bandoulière compact quotidien",
+    price: 9500,
+    category: "casual",
+    icon: "👜",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
+    description: "Sac bandoulière compact et pratique pour le quotidien, design moderne et fonctionnel",
+    stock: 20,
+    status: 'active'
+  },
+  {
     id: 7,
-    name: "Lampe design",
-    price: 7800,
-    category: "home",
-    icon: "💡",
-    image: "/images/products/lampe-design.svg",
-    description: "Éclairage moderne",
-    stock: 6,
+    name: "Sac cabas élégant grand format",
+    price: 16500,
+    category: "casual",
+    icon: "👜",
+    image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
+    description: "Grand sac cabas élégant parfait pour le travail et les sorties, spacieux et stylé",
+    stock: 14,
     status: 'active'
   },
   {
     id: 8,
-    name: "Portefeuille cuir",
-    price: 4200,
-    category: "bags",
-    icon: "💳",
-    image: "/images/products/portefeuille-cuir.svg",
-    description: "Cuir véritable, design élégant",
+    name: "Pochette soirée élégante",
+    price: 8500,
+    category: "luxury",
+    icon: "👛",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
+    description: "Pochette raffinée pour les occasions spéciales, finitions dorées et design sophistiqué",
     stock: 18,
     status: 'active'
   }
@@ -137,38 +138,47 @@ const defaultProducts: Product[] = [
 
 const defaultCategories: Category[] = [
   {
-    id: 'fashion',
-    name: 'Mode & Style',
-    icon: '👗',
-    image: '/images/categories/fashion.svg',
-    description: 'Vêtements tendance et accessoires',
-    productCount: 0,
-    status: 'active'
-  },
-  {
-    id: 'bags',
-    name: 'Sacs & Maroquinerie',
+    id: 'luxury',
+    name: 'Sacs de Luxe',
     icon: '👜',
-    image: '/images/categories/bags.svg',
-    description: 'Sacs à main, portefeuilles et plus',
+    image: '/images/categories/luxury.svg',
+    description: 'Sacs haut de gamme en cuir premium et finitions dorées',
     productCount: 0,
     status: 'active'
   },
   {
-    id: 'electronics',
-    name: 'Électronique',
-    icon: '📱',
-    image: '/images/categories/electronics.svg',
-    description: 'Gadgets et accessoires tech',
+    id: 'vintage',
+    name: 'Collection Vintage',
+    icon: '🎨',
+    image: '/images/categories/vintage.svg',
+    description: 'Designs rétro et motifs géométriques tendance',
     productCount: 0,
     status: 'active'
   },
   {
-    id: 'home',
-    name: 'Maison & Déco',
-    icon: '🏠',
-    image: '/images/categories/home.svg',
-    description: 'Décoration et mobilier',
+    id: 'business',
+    name: 'Business & Travail',
+    icon: '💼',
+    image: '/images/categories/business.svg',
+    description: 'Sacs professionnels et fonctionnels pour le travail',
+    productCount: 0,
+    status: 'active'
+  },
+  {
+    id: 'retro',
+    name: 'Style Rétro',
+    icon: '🕶️',
+    image: '/images/categories/retro.svg',
+    description: 'Imprimés vintage et designs classiques intemporels',
+    productCount: 0,
+    status: 'active'
+  },
+  {
+    id: 'casual',
+    name: 'Casual & Quotidien',
+    icon: '👜',
+    image: '/images/categories/casual.svg',
+    description: 'Sacs pratiques et confortables pour tous les jours',
     productCount: 0,
     status: 'active'
   }
@@ -198,23 +208,35 @@ const saveToStorage = (key: string, value: any) => {
 };
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  // Initialisation avec localStorage
-  const [products, setProducts] = useState<Product[]>(() => 
-    loadFromStorage('logodouman_products', defaultProducts)
-  );
+  // État pour gérer l'hydratation
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  // Initialisation sans localStorage pour éviter l'hydratation error
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
 
-  const [categories, setCategories] = useState<Category[]>(() => 
-    loadFromStorage('logodouman_categories', defaultCategories)
-  );
-
-  // Sauvegarder automatiquement quand les données changent
+  // Charger les données du localStorage après l'hydratation
   useEffect(() => {
-    saveToStorage('logodouman_products', products);
-  }, [products]);
+    const storedProducts = loadFromStorage('logodouman_products', defaultProducts);
+    const storedCategories = loadFromStorage('logodouman_categories', defaultCategories);
+    
+    setProducts(storedProducts);
+    setCategories(storedCategories);
+    setIsHydrated(true);
+  }, []);
+
+  // Sauvegarder automatiquement quand les données changent (seulement après hydratation)
+  useEffect(() => {
+    if (isHydrated) {
+      saveToStorage('logodouman_products', products);
+    }
+  }, [products, isHydrated]);
 
   useEffect(() => {
-    saveToStorage('logodouman_categories', categories);
-  }, [categories]);
+    if (isHydrated) {
+      saveToStorage('logodouman_categories', categories);
+    }
+  }, [categories, isHydrated]);
 
   // Mettre à jour les compteurs de produits par catégorie
   const updateCategoryProductCounts = (updatedProducts: Product[]) => {
@@ -305,14 +327,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveToStorage('logodouman_categories', defaultCategories);
   };
 
-  // Initialiser les compteurs de produits par catégorie
-  useState(() => {
-    updateCategoryProductCounts(products);
-  });
+  // Mettre à jour les compteurs après hydratation
+  useEffect(() => {
+    if (isHydrated) {
+      updateCategoryProductCounts(products);
+    }
+  }, [isHydrated, products]);
 
   const value: StoreContextType = {
     products,
     categories,
+    isHydrated,
     addProduct,
     updateProduct,
     deleteProduct,

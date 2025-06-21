@@ -1,373 +1,183 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 import { useStore } from './contexts/StoreContext';
 
-// Types
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  icon: string;
-  description: string;
-  quantity: number;
-}
-
-export default function LogoDouman() {
-  const { getActiveProducts, getActiveCategories } = useStore();
-  const products = getActiveProducts();
-  const categoryList = getActiveCategories();
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [currentFilter, setCurrentFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-
-  // Filtrer les produits
-  const getFilteredProducts = () => {
-    let filtered = products;
-    
-    if (currentFilter !== 'all') {
-      filtered = filtered.filter(product => product.category === currentFilter);
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    return filtered;
-  };
-
-  // Ajouter au panier
-  const addToCart = (productId: number) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === productId);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-
-    setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
-  };
-
-  // Supprimer du panier
-  const removeFromCart = (productId: number) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
-  };
-
-  // Calculer le total
-  const getCartTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
-
-  // Calculer le nombre d'articles
-  const getCartItemsCount = () => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  // Finaliser la commande
-  const checkout = () => {
-    if (cart.length === 0) {
-      alert('Votre panier est vide !');
-      return;
-    }
-    
-    const total = getCartTotal();
-    alert(`Commande confirmée !\nTotal: ${total.toLocaleString()} FCFA\n\nMerci pour votre achat !`);
-    setCart([]);
-    setIsCartOpen(false);
-  };
+// Header Component - Identique au site original
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-200 to-orange-300">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-orange-400/95 backdrop-blur-md border-b border-orange-600/50">
-        <nav className="container mx-auto px-4 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Logo */}
-            <div className="flex items-center gap-3 text-black text-xl font-bold">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center text-xl">
-                🛒
-              </div>
-              <span className="text-2xl">
-                <span className="text-orange-700">Logo</span>
-                <span className="text-black">Douman</span>
-              </span>
-            </div>
+    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900">LogoDouman</h1>
+            <span className="ml-2 text-sm text-gray-500">Côte d'Ivoire</span>
+          </div>
 
-            {/* Search Bar */}
-            <div className="flex bg-white rounded-full overflow-hidden flex-grow max-w-md shadow-lg border-2 border-orange-600/30">
-              <input
-                type="text"
-                placeholder="Rechercher des produits..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 flex-grow outline-none bg-white text-black placeholder-gray-500"
-              />
-              <button className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 text-white hover:from-orange-700 hover:to-orange-800 transition-all duration-300">
-                🔍
+          <nav className="hidden md:flex space-x-8">
+            <a href="#home" className="text-gray-900 font-medium">Accueil</a>
+            <Link href="/boutique" className="text-gray-700 hover:text-gray-900 transition-colors">Boutique</Link>
+            <Link href="/blog" className="text-gray-700 hover:text-gray-900 transition-colors">Blog</Link>
+            <Link href="/contact" className="text-gray-700 hover:text-gray-900 transition-colors">Nous contacter</Link>
+            <div className="relative group">
+              <button className="text-gray-700 hover:text-gray-900 transition-colors flex items-center">
+                More
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <Link href="/admin" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Administration</Link>
+                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">Aide</a>
+                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-50">À propos</a>
+              </div>
             </div>
+          </nav>
 
-            {/* Navigation Links */}
-            <div className="hidden md:flex items-center gap-6 text-black">
-              <a href="#home" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Accueil</a>
-              <a href="#categories" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Catégories</a>
-              <a href="#products" className="hover:text-orange-700 hover:bg-white/20 px-4 py-2 rounded-full transition-all duration-300 font-medium">Produits</a>
-              <a href="/admin" className="bg-orange-600 text-white hover:bg-orange-700 px-4 py-2 rounded-full transition-all duration-300 font-medium">⚙️ Admin</a>
-            </div>
-
-            {/* Cart Button */}
+          <div className="flex items-center space-x-4">
             <button
-              onClick={() => setIsCartOpen(!isCartOpen)}
-              className="relative bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white p-3 rounded-full transition-all transform hover:scale-110 shadow-lg"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900"
             >
-              🛒
-              {getCartItemsCount() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-md">
-                  {getCartItemsCount()}
-                </span>
-              )}
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
-        </nav>
-      </header>
-
-      {/* Hero Section */}
-      <section id="home" className="text-center py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-300/50 via-orange-400/40 to-orange-500/50"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <h1 className="text-6xl font-bold mb-6 animate-fade-in">
-            <span className="text-orange-700">Logo</span>
-            <span className="text-black">Douman</span>
-          </h1>
-          <p className="text-2xl mb-4 font-light text-black">Plateforme e-commerce de nouvelle génération</p>
-          <p className="text-lg mb-10 max-w-2xl mx-auto text-gray-800">Découvrez notre sélection exclusive de produits de qualité dans un environnement moderne et sécurisé</p>
-          <a
-            href="#products"
-            className="inline-block bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-orange-500"
-          >
-            Découvrir nos produits
-          </a>
         </div>
-      </section>
 
-      {/* Categories */}
-      <section id="categories" className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-br from-orange-300 to-orange-400 rounded-3xl p-10 shadow-2xl border-2 border-orange-500">
-            <h2 className="text-4xl font-bold text-center mb-12 text-black">
-              Nos <span className="text-orange-700">Catégories</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {categoryList.map((category) => (
-                <div
-                  key={category.id}
-                  onClick={() => setCurrentFilter(category.id)}
-                  className="bg-gradient-to-br from-orange-400 to-orange-500 text-black p-8 rounded-2xl text-center cursor-pointer hover:-translate-y-3 hover:shadow-2xl transition-all duration-300 border-2 border-orange-600/50 hover:border-orange-700 group overflow-hidden"
-                >
-                  <div className="w-full h-32 mb-4 bg-white/10 rounded-xl overflow-hidden flex items-center justify-center">
-                    {category.image ? (
-                      <img 
-                        src={category.image} 
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className={`text-5xl ${category.image ? 'hidden' : 'flex'} items-center justify-center w-full h-full group-hover:scale-110 transition-transform duration-300`}>
-                      {category.icon}
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">{category.name}</h3>
-                  <p className="text-sm text-gray-800">{category.description}</p>
-                </div>
-              ))}
-            </div>
-            {currentFilter !== 'all' && (
-              <div className="text-center mt-8">
-                <button
-                  onClick={() => setCurrentFilter('all')}
-                  className="bg-gradient-to-r from-gray-700 to-black text-white px-8 py-3 rounded-full hover:from-black hover:to-gray-700 transition-all duration-300 border border-orange-600/50 hover:border-orange-600"
-                >
-                  Voir tous les produits
-                </button>
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-100">
+            <nav className="flex flex-col space-y-2">
+              <a href="#home" className="py-2 text-gray-900 font-medium">Accueil</a>
+              <Link href="/boutique" className="py-2 text-gray-700 hover:text-gray-900">Boutique</Link>
+              <Link href="/blog" className="py-2 text-gray-700 hover:text-gray-900">Blog</Link>
+              <Link href="/contact" className="py-2 text-gray-700 hover:text-gray-900">Nous contacter</Link>
+              <div className="border-t pt-2 mt-2">
+                <p className="py-1 text-sm text-gray-500">More</p>
+                <Link href="/admin" className="py-2 text-gray-700 hover:text-gray-900">Administration</Link>
+                <a href="#" className="py-2 text-gray-700 hover:text-gray-900">Aide</a>
+                <a href="#" className="py-2 text-gray-700 hover:text-gray-900">À propos</a>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Products */}
-      <section id="products" className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-br from-orange-300 to-orange-400 rounded-3xl p-10 shadow-2xl border-2 border-orange-500">
-            <h2 className="text-4xl font-bold text-center mb-12 text-black">
-              {currentFilter === 'all' ? 'Produits' : 'Produits Filtrés'} <span className="text-orange-700">Populaires</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {getFilteredProducts().map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-gradient-to-br from-orange-200 to-orange-300 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-orange-400 hover:border-orange-600/70 group"
-                >
-                  <div className="h-52 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
-                    {product.image ? (
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          // Fallback vers emoji si image non disponible
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className={`text-7xl text-white flex items-center justify-center w-full h-full ${product.image ? 'hidden' : 'flex'}`}>
-                      {product.icon}
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-lg mb-3 text-black group-hover:text-orange-700 transition-colors">{product.name}</h3>
-                    <p className="text-3xl font-bold text-orange-700 mb-3">
-                      {product.price.toLocaleString()} 
-                      <span className="text-lg font-normal text-gray-700"> FCFA</span>
-                    </p>
-                    <p className="text-gray-700 mb-6 text-sm leading-relaxed">{product.description}</p>
-                    <button
-                      onClick={() => addToCart(product.id)}
-                      className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-3 rounded-xl font-bold hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl border border-orange-500"
-                    >
-                      Ajouter au panier
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {getFilteredProducts().length === 0 && (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">🔍</div>
-                <p className="text-xl text-black">Aucun produit trouvé</p>
-                <p className="text-gray-700">Essayez un autre terme de recherche ou changez de catégorie</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Cart Sidebar */}
-      <div className={`fixed right-0 top-0 h-full w-full md:w-96 bg-orange-100 shadow-2xl z-50 transform transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} border-l-4 border-orange-600`}>
-        <div className="bg-gradient-to-r from-orange-400 to-orange-500 p-6 flex justify-between items-center border-b-2 border-orange-600">
-          <h3 className="text-xl font-bold text-black">Mon <span className="text-orange-800">Panier</span></h3>
-          <button
-            onClick={() => setIsCartOpen(false)}
-            className="text-2xl hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:text-orange-800 text-black"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 max-h-[60vh]">
-          {cart.length === 0 ? (
-            <div className="text-center mt-16">
-              <div className="text-6xl mb-4 opacity-50">🛒</div>
-              <p className="text-gray-600 text-lg">Votre panier est vide</p>
-              <p className="text-gray-500 text-sm mt-2">Ajoutez des produits pour commencer</p>
-            </div>
-          ) : (
-            cart.map((item) => (
-              <div key={item.id} className="flex justify-between items-center py-4 border-b border-orange-300 hover:bg-orange-200 px-2 rounded-lg transition-colors">
-                <div className="flex-1">
-                  <h4 className="font-bold text-black">{item.name}</h4>
-                  <p className="text-sm text-gray-700">Quantité: <span className="font-semibold text-orange-700">{item.quantity}</span></p>
-                </div>
-                <div className="text-right ml-4">
-                  <p className="font-bold text-orange-700 text-lg">{(item.price * item.quantity).toLocaleString()} FCFA</p>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-red-600 text-sm hover:bg-red-50 px-3 py-1 rounded-full transition-all duration-300 font-medium border border-red-300 hover:border-red-400"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {cart.length > 0 && (
-          <div className="border-t-2 border-orange-600 p-6 bg-orange-200">
-            <div className="text-center mb-6 bg-white p-4 rounded-xl border-2 border-orange-400">
-              <p className="text-2xl font-bold text-black">
-                Total: <span className="text-orange-700">{getCartTotal().toLocaleString()} FCFA</span>
-              </p>
-            </div>
-            <button
-              onClick={checkout}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 rounded-xl font-bold hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-green-400"
-            >
-              🛍️ Passer commande
-            </button>
+            </nav>
           </div>
         )}
       </div>
+    </header>
+  );
+};
 
-      {/* Overlay pour fermer le panier */}
-      {isCartOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsCartOpen(false)}
-        ></div>
-      )}
-
-      {/* Notification */}
-      <div className={`fixed top-24 right-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 transform transition-all duration-300 border-2 border-green-400 ${showNotification ? 'translate-x-0 scale-100' : 'translate-x-full scale-95'}`}>
-        <div className="flex items-center gap-2">
-          <span className="text-xl">✅</span>
-          <span className="font-bold">Produit ajouté au panier !</span>
+// Hero Section
+const HeroSection = () => (
+  <section id="home" className="bg-gradient-to-br from-gray-50 to-white py-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center">
+        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          Meilleure offre
+          <span className="block text-gray-600">sac à main</span>
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Découvrez notre collection exclusive de sacs à main premium, 
+          alliant élégance et fonctionnalité pour toutes les occasions.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/boutique"
+            className="bg-gray-900 text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          >
+            Découvrir la boutique
+          </Link>
+          <Link
+            href="/contact"
+            className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg hover:border-gray-400 transition-colors font-medium"
+          >
+            Nous contacter
+          </Link>
         </div>
       </div>
+    </div>
+  </section>
+);
 
-      {/* Footer */}
-      <footer className="bg-orange-400 py-12 mt-16 border-t-4 border-orange-600">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex justify-center items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg flex items-center justify-center text-2xl">
-              🛒
+// Section Produits - Simple comme le site original
+const ProductsSection = () => {
+  const { getActiveProducts } = useStore();
+  const products = getActiveProducts();
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Produits phares - Pas de filtres complexes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {products.slice(0, 6).map(product => (
+            <div key={product.id} className="group cursor-pointer">
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+                <img
+                  src={product.image || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop'}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop';
+                  }}
+                />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {product.name}
+              </h3>
             </div>
-            <span className="text-3xl font-bold">
-              <span className="text-orange-800">Logo</span>
-              <span className="text-black">Douman</span>
-            </span>
-          </div>
-          <p className="text-lg mb-2 text-black">&copy; 2024 LogoDouman. Créé avec <span className="text-orange-700">❤️</span> pour révolutionner l'e-commerce</p>
-          <p className="text-orange-800 font-medium">Plateforme e-commerce de nouvelle génération</p>
-          <div className="mt-6 flex justify-center gap-6 text-sm">
-            <a href="#" className="hover:text-orange-800 transition-colors text-gray-800">Mentions légales</a>
-            <a href="#" className="hover:text-orange-800 transition-colors text-gray-800">CGV</a>
-            <a href="#" className="hover:text-orange-800 transition-colors text-gray-800">Contact</a>
-            <a href="#" className="hover:text-orange-800 transition-colors text-gray-800">Support</a>
-          </div>
+          ))}
         </div>
-      </footer>
+      </div>
+    </section>
+  );
+};
+
+// Footer simplifié
+const Footer = () => (
+  <footer className="bg-gray-900 text-white py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center">
+        <h3 className="text-xl font-bold mb-4">LogoDouman</h3>
+        <p className="text-gray-400 mb-4">Côte d'Ivoire</p>
+        <div className="flex justify-center space-x-6 text-sm">
+          <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
+          <Link href="/boutique" className="hover:text-white transition-colors">Boutique</Link>
+          <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+          <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+        </div>
+        <div className="border-t border-gray-800 mt-8 pt-8 text-gray-400">
+          <p>&copy; 2024 LogoDouman. Tous droits réservés.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
+// App principal
+export default function LogoDouman() {
+  const { isHydrated } = useStore();
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">LogoDouman</h2>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Header />
+      <HeroSection />
+      <ProductsSection />
+      <Footer />
     </div>
   );
 }

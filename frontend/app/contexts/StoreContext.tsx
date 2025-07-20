@@ -2,24 +2,59 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// Types
+// Types étendus basés sur l'analyse de logodouman.com
 export interface Product {
+  // Attributs de base (existants)
   id: number;
   name: string;
   price: number;
   category: string;
   icon: string;
-  image?: string; // URL de l'image du produit
+  image?: string;
   description: string;
   stock?: number;
   status?: 'active' | 'inactive';
+  
+  // Nouveaux attributs essentiels de logodouman.com
+  sku?: string;                    // Référence produit (ex: "C05N036")
+  
+  // Matériaux
+  material?: string;               // Matériau principal (ex: "Cuir PU", "Cuir synthétique")
+  lining?: string;                 // Matériau doublure (ex: "Polyester")
+  coating?: string;                // Matériau revêtement
+  
+  // Caractéristiques physiques
+  dimensions?: string;             // Taille (ex: "22 x 16 x 11 cm")
+  weight?: number;                 // Poids en kg (ex: 0.6)
+  shape?: string;                  // Forme (ex: "Rectangle", "Carré", "Rond")
+  
+  // Design et style
+  styles?: string[];               // Styles multiples (ex: ["Mode", "Dame", "Vintage"])
+  pattern?: string;                // Type de motif (ex: "Géométrique", "Solide", "Imprimé")
+  decoration?: string;             // Éléments décoratifs (ex: "Verrouillage", "Logo métal")
+  
+  // Caractéristiques techniques
+  closure?: string;                // Type de fermeture (ex: "Fermeture éclair", "Bouton-pression")
+  handles?: string;                // Poignées/sangles (ex: "Simple", "Double", "Bandoulière")
+  
+  // Usage et saisonnalité
+  season?: string;                 // Saison (ex: "Toutes saisons", "Été", "Hiver")
+  occasion?: string;               // Occasion (ex: "Quotidien", "Soirée", "Travail")
+  features?: string[];             // Fonctionnalités (ex: ["Imperméable", "Port USB", "Antivol"])
+  
+  // Couleurs disponibles
+  colors?: string[];               // Couleurs disponibles (ex: ["Noir", "Rouge", "Personnalisable"])
+  
+  // Informations commerciales
+  gender?: string;                 // Genre (ex: "Femme", "Homme", "Unisexe")
+  ageGroup?: string;               // Groupe d'âge (ex: "Adulte", "Jeune")
 }
 
 export interface Category {
   id: string;
   name: string;
   icon: string;
-  image?: string; // URL de l'image de la catégorie
+  image?: string;
   description: string;
   productCount?: number;
   status?: 'active' | 'inactive';
@@ -44,7 +79,7 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// Données initiales par défaut - Sacs à main LogoDouman
+// Données initiales enrichies avec les nouveaux attributs
 const defaultProducts: Product[] = [
   {
     id: 1,
@@ -55,7 +90,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
     description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
     stock: 12,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N001",
+    material: "Cuir PU",
+    lining: "Polyester",
+    dimensions: "25 x 18 x 12 cm",
+    weight: 0.7,
+    shape: "Rectangle",
+    styles: ["Mode", "Luxe", "Élégant"],
+    pattern: "Solide",
+    decoration: "Anneau doré",
+    closure: "Fermeture éclair",
+    handles: "Double poignée",
+    season: "Toutes saisons",
+    occasion: "Soirée",
+    features: ["Résistant", "Élégant"],
+    colors: ["Noir", "Rouge", "Beige"],
+    gender: "Femme",
+    ageGroup: "Adulte"
   },
   {
     id: 2,
@@ -66,7 +119,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
     description: "Sac tendance avec motifs géométriques vintage, léger et pratique pour un look moderne",
     stock: 8,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N002",
+    material: "Toile enduite",
+    lining: "Coton",
+    dimensions: "30 x 25 x 8 cm",
+    weight: 0.4,
+    shape: "Rectangle",
+    styles: ["Vintage", "Décontracté", "Tendance"],
+    pattern: "Géométrique",
+    decoration: "Motifs imprimés",
+    closure: "Fermeture éclair",
+    handles: "Bandoulière réglable",
+    season: "Printemps-Été",
+    occasion: "Quotidien",
+    features: ["Léger", "Pratique"],
+    colors: ["Multicolore", "Beige", "Marron"],
+    gender: "Femme",
+    ageGroup: "Jeune Adulte"
   },
   {
     id: 3,
@@ -77,7 +148,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=400&h=400&fit=crop&crop=center",
     description: "Sac à dos professionnel antivol avec protection contre l'eau pour ordinateur portable",
     stock: 15,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N003",
+    material: "Nylon renforcé",
+    lining: "Polyester",
+    dimensions: "45 x 30 x 15 cm",
+    weight: 1.2,
+    shape: "Ergonomique",
+    styles: ["Business", "Moderne", "Fonctionnel"],
+    pattern: "Solide",
+    decoration: "Logo discret",
+    closure: "Fermeture éclair",
+    handles: "Bretelles rembourrées",
+    season: "Toutes saisons",
+    occasion: "Travail",
+    features: ["Imperméable", "Antivol", "Port USB", "Compartiment ordinateur"],
+    colors: ["Noir", "Gris", "Bleu marine"],
+    gender: "Unisexe",
+    ageGroup: "Adulte"
   },
   {
     id: 4,
@@ -88,7 +177,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop&crop=center",
     description: "Design rétro avec imprimés tendance pour un look vintage moderne et sophistiqué",
     stock: 10,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N004",
+    material: "Cuir synthétique",
+    lining: "Satin",
+    dimensions: "28 x 20 x 10 cm",
+    weight: 0.6,
+    shape: "Trapèze",
+    styles: ["Rétro", "Vintage", "Sophistiqué"],
+    pattern: "Imprimé fleuri",
+    decoration: "Fermoir vintage",
+    closure: "Fermoir clip",
+    handles: "Poignée courte",
+    season: "Automne-Hiver",
+    occasion: "Sortie",
+    features: ["Style unique", "Vintage"],
+    colors: ["Bordeaux", "Vert olive", "Bleu canard"],
+    gender: "Femme",
+    ageGroup: "Adulte"
   },
   {
     id: 5,
@@ -99,7 +206,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
     description: "Sac en cuir véritable premium, design exclusif et finitions haut de gamme artisanales",
     stock: 5,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N005",
+    material: "Cuir véritable",
+    lining: "Cuir doublé",
+    dimensions: "32 x 24 x 14 cm",
+    weight: 0.9,
+    shape: "Classique",
+    styles: ["Luxe", "Premium", "Classique"],
+    pattern: "Grainé",
+    decoration: "Finitions dorées",
+    closure: "Fermeture éclair premium",
+    handles: "Double poignée cuir",
+    season: "Toutes saisons",
+    occasion: "Prestige",
+    features: ["Cuir premium", "Artisanal", "Exclusif"],
+    colors: ["Noir", "Cognac", "Bordeaux"],
+    gender: "Femme",
+    ageGroup: "Adulte"
   },
   {
     id: 6,
@@ -110,7 +235,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
     description: "Sac bandoulière compact et pratique pour le quotidien, design moderne et fonctionnel",
     stock: 20,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N006",
+    material: "Coton canvas",
+    lining: "Polyester",
+    dimensions: "20 x 15 x 8 cm",
+    weight: 0.3,
+    shape: "Compact",
+    styles: ["Décontracté", "Moderne", "Pratique"],
+    pattern: "Solide",
+    decoration: "Logo brodé",
+    closure: "Fermeture éclair",
+    handles: "Bandoulière ajustable",
+    season: "Toutes saisons",
+    occasion: "Quotidien",
+    features: ["Compact", "Léger", "Pratique"],
+    colors: ["Beige", "Kaki", "Noir"],
+    gender: "Unisexe",
+    ageGroup: "Jeune Adulte"
   },
   {
     id: 7,
@@ -121,7 +264,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
     description: "Grand sac cabas élégant parfait pour le travail et les sorties, spacieux et stylé",
     stock: 14,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N007",
+    material: "Cuir PU",
+    lining: "Tissu doublé",
+    dimensions: "40 x 35 x 15 cm",
+    weight: 0.8,
+    shape: "Cabas",
+    styles: ["Élégant", "Spacieux", "Professionnel"],
+    pattern: "Solide",
+    decoration: "Rivets métalliques",
+    closure: "Ouvert avec bouton-pression",
+    handles: "Double poignée longue",
+    season: "Toutes saisons",
+    occasion: "Travail",
+    features: ["Grande capacité", "Élégant", "Résistant"],
+    colors: ["Camel", "Noir", "Gris"],
+    gender: "Femme",
+    ageGroup: "Adulte"
   },
   {
     id: 8,
@@ -132,7 +293,25 @@ const defaultProducts: Product[] = [
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center&auto=format&q=80",
     description: "Pochette raffinée pour les occasions spéciales, finitions dorées et design sophistiqué",
     stock: 18,
-    status: 'active'
+    status: 'active',
+    // Nouveaux attributs
+    sku: "C05N008",
+    material: "Satin",
+    lining: "Soie",
+    dimensions: "25 x 15 x 3 cm",
+    weight: 0.2,
+    shape: "Pochette",
+    styles: ["Élégant", "Soirée", "Raffiné"],
+    pattern: "Solide",
+    decoration: "Chaîne dorée",
+    closure: "Fermoir clip",
+    handles: "Chaîne amovible",
+    season: "Toutes saisons",
+    occasion: "Soirée",
+    features: ["Élégant", "Léger", "Chaîne dorée"],
+    colors: ["Or", "Argent", "Noir", "Rouge"],
+    gender: "Femme",
+    ageGroup: "Adulte"
   }
 ];
 
@@ -182,6 +361,61 @@ const defaultCategories: Category[] = [
     productCount: 0,
     status: 'active'
   }
+];
+
+// Constantes pour les nouveaux filtres
+export const MATERIALS = [
+  'Cuir PU',
+  'Cuir synthétique', 
+  'Cuir véritable',
+  'Toile enduite',
+  'Nylon renforcé',
+  'Coton canvas',
+  'Satin'
+];
+
+export const SHAPES = [
+  'Rectangle',
+  'Carré', 
+  'Rond',
+  'Trapèze',
+  'Ergonomique',
+  'Classique',
+  'Compact',
+  'Cabas',
+  'Pochette'
+];
+
+export const STYLES = [
+  'Mode',
+  'Luxe',
+  'Vintage',
+  'Décontracté',
+  'Business',
+  'Moderne',
+  'Élégant',
+  'Rétro',
+  'Sophistiqué',
+  'Fonctionnel',
+  'Premium',
+  'Classique',
+  'Pratique',
+  'Tendance'
+];
+
+export const OCCASIONS = [
+  'Quotidien',
+  'Travail',
+  'Soirée',
+  'Sortie',
+  'Prestige'
+];
+
+export const CLOSURES = [
+  'Fermeture éclair',
+  'Bouton-pression',
+  'Fermoir clip',
+  'Ouvert avec bouton-pression'
 ];
 
 // Fonctions utilitaires pour le localStorage

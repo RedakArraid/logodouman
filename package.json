@@ -29,7 +29,16 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["ecommerce", "nextjs", "nodejs", "postgresql", "stripe"],
+  "keywords": [
+    "ecommerce",
+    "nextjs",
+    "nodejs",
+    "postgresql",
+    "stripe"
+  ],
   "author": "LogoDouman Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0"
+  }
 }

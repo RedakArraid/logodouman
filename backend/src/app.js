@@ -1,13 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4002;
+
+const productRoutes = require('./routes.product');
+const categoryRoutes = require('./routes.category');
+const authRoutes = require('./routes.auth');
+const dashboardRoutes = require('./routes.dashboard');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Routes de test
 app.get('/', (req, res) => {
@@ -71,7 +83,7 @@ app.use('*', (req, res) => {
 });
 
 // Démarrage du serveur
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 🚀 LogoDouman Backend démarré !
 

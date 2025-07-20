@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "55432:5432"
     networks:
       - logodouman-network
     healthcheck:
@@ -51,6 +51,31 @@ services:
       - logodouman-network
     depends_on:
       - postgres
+
+  # Frontend Next.js
+  frontend:
+    build: ./frontend
+    container_name: logodouman-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - logodouman-network
+
+  # Backend Node.js/Express
+  backend:
+    build: ./backend
+    container_name: logodouman-backend
+    restart: unless-stopped
+    ports:
+      - "4002:4002"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - logodouman-network
 
 volumes:
   postgres_data:

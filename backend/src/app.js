@@ -6,28 +6,45 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 4002;
 
+// Import des routes
 const productRoutes = require('./routes.product');
 const categoryRoutes = require('./routes.category');
 const authRoutes = require('./routes.auth');
 const dashboardRoutes = require('./routes.dashboard');
+const orderRoutes = require('./routes.orders');
+const customerRoutes = require('./routes.customers');
+const promotionRoutes = require('./routes.promotions');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Routes API
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Routes de test
 app.get('/', (req, res) => {
   res.json({
     message: '🚀 LogoDouman API est opérationnelle !',
-    version: '1.0.0',
+    version: '2.0.0',
     environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      products: '/api/products',
+      categories: '/api/categories',
+      orders: '/api/orders',
+      customers: '/api/customers',
+      promotions: '/api/promotions',
+      auth: '/api/auth',
+      dashboard: '/api/dashboard'
+    }
   });
 });
 
@@ -35,7 +52,8 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: '2.0.0'
   });
 });
 
@@ -85,7 +103,7 @@ app.use('*', (req, res) => {
 // Démarrage du serveur
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-🚀 LogoDouman Backend démarré !
+🚀 LogoDouman Backend v2.0 démarré !
 
 📊 Informations:
    Port: ${PORT}
@@ -98,6 +116,14 @@ app.listen(PORT, '0.0.0.0', () => {
    
 📱 Frontend: http://localhost:3000
 🗄️  Adminer: http://localhost:8080
+
+🆕 Nouvelles fonctionnalités:
+   ✅ Gestion des commandes
+   ✅ Gestion des clients
+   ✅ Système de promotions
+   ✅ Analyse des ventes
+   ✅ Segmentation clients
+   ✅ Alertes automatisées
   `);
 });
 

@@ -98,7 +98,7 @@ export default function BoutiquePage() {
 
     let filtered = products.filter(product => {
       // Filtre par catégorie
-      const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+      const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
       
       // Filtre par prix
       const priceMatch = product.price >= minPrice && product.price <= maxPrice;
@@ -249,7 +249,7 @@ export default function BoutiquePage() {
                       </span>
                     </label>
                     {categories.map(category => {
-                      const count = products.filter(p => p.category === category.id).length;
+                      const count = products.filter(p => p.categoryId === category.id).length;
                       return (
                         <label key={category.id} className="flex items-center cursor-pointer">
                           <input
@@ -398,7 +398,7 @@ export default function BoutiquePage() {
                       {/* Catégorie */}
                       <div className="flex items-center justify-between mb-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {categories.find(c => c.id === product.category)?.name}
+                          {categories.find(c => c.id === product.categoryId)?.name}
                         </span>
                       </div>
 

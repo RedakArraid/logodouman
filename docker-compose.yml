@@ -1,4 +1,5 @@
-version: '3.8'
+# Docker Compose pour LogoDouman - Version corrigée
+# Suppression de la ligne version (obsolète dans Docker Compose v2+)
 
 services:
   # Base de données PostgreSQL
@@ -21,13 +22,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
-  # Cache Redis
+  # Cache Redis - Configuration simplifiée
   redis:
     image: redis:7-alpine
     container_name: logodouman-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --requirepass redis123
     volumes:
       - redis_data:/data
     ports:
@@ -35,51 +37,93 @@ services:
     networks:
       - logodouman-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 10s
 
-  # Adminer pour gérer la base de données (optionnel)
+  # Backend Node.js/Express
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: logodouman-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:logodouman123@postgres:5432/logodouman
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=logodouman-super-secret-jwt-key-docker-2024
+      - CORS_ORIGIN=http://localhost:3000
+    ports:
+      - "4002:4002"
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - logodouman-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Frontend Next.js
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: logodouman-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:4002
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - logodouman-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Adminer pour gérer la base de données
   adminer:
-    image: adminer
+    image: adminer:4.8.1
     container_name: logodouman-adminer
     restart: unless-stopped
     ports:
       - "8080:8080"
-    networks:
-      - logodouman-network
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
     depends_on:
-      - postgres
-
-  # Frontend Next.js
-  frontend:
-    build: ./frontend
-    container_name: logodouman-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    networks:
-      - logodouman-network
-
-  # Backend Node.js/Express
-  backend:
-    build: ./backend
-    container_name: logodouman-backend
-    restart: unless-stopped
-    ports:
-      - "4002:4002"
-    depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
     networks:
       - logodouman-network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
 
 networks:
   logodouman-network:

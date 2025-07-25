@@ -15,8 +15,21 @@ const orderRoutes = require('./routes.orders');
 const customerRoutes = require('./routes.customers');
 const promotionRoutes = require('./routes.promotions');
 
+// Configuration CORS pour Docker
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://frontend:3000',
+    'http://127.0.0.1:3000',
+    process.env.CORS_ORIGIN
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

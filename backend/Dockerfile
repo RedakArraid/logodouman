@@ -1,8 +1,8 @@
-# Dockerfile pour le backend Node.js/Express avec corrections
+# Dockerfile simplifié pour le backend LogoDouman
 FROM node:18-alpine
 
-# Installer les dépendances système
-RUN apk add --no-cache openssl curl
+# Installer les dépendances système nécessaires
+RUN apk add --no-cache openssl curl netcat-openbsd
 
 WORKDIR /app
 
@@ -14,30 +14,29 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copier le schéma Prisma et générer le client
 COPY prisma ./prisma
-RUN npx prisma generate
 
 # Copier le reste de l'application
 COPY . .
 
-# Copier le fichier d'environnement Docker
-COPY .env.docker .env
+# Générer le client Prisma
+RUN npx prisma generate
 
 # Créer les dossiers nécessaires
 RUN mkdir -p /app/uploads /app/logs
 RUN chown -R node:node /app
+
+# Rendre le script d'entrée exécutable
+RUN chmod +x /app/scripts/docker-entrypoint.sh
 
 # Utiliser l'utilisateur non-root
 USER node
 
 EXPOSE 4002
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+# Health check simplifié
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:4002/health || exit 1
 
-# Script de démarrage avec attente de la DB
-COPY --chown=node:node scripts/docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Point d'entrée
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["npm", "start"]

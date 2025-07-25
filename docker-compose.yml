@@ -1,8 +1,6 @@
-# Docker Compose pour LogoDouman - Version corrigée
-# Suppression de la ligne version (obsolète dans Docker Compose v2+)
-
+# Docker Compose pour LogoDouman - Version corrigée complète
 services:
-  # Base de données PostgreSQL
+  # PostgreSQL - Base de données
   postgres:
     image: postgres:16-alpine
     container_name: logodouman-postgres
@@ -19,12 +17,12 @@ services:
       - logodouman-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d logodouman"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  # Cache Redis - Configuration simplifiée
+  # Redis - Cache
   redis:
     image: redis:7-alpine
     container_name: logodouman-redis
@@ -37,13 +35,12 @@ services:
     networks:
       - logodouman-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "auth", "redis123", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
-      start_period: 10s
 
-  # Backend Node.js/Express
+  # Backend - API Node.js
   backend:
     build: 
       context: ./backend
@@ -53,9 +50,10 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:logodouman123@postgres:5432/logodouman
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:redis123@redis:6379
       - JWT_SECRET=logodouman-super-secret-jwt-key-docker-2024
-      - CORS_ORIGIN=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3000,http://frontend:3000
+      - PORT=4002
     ports:
       - "4002:4002"
     volumes:
@@ -71,11 +69,11 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
-  # Frontend Next.js
+  # Frontend - Next.js
   frontend:
     build: 
       context: ./frontend
@@ -94,13 +92,13 @@ services:
     networks:
       - logodouman-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 45s
+      start_period: 60s
 
-  # Adminer pour gérer la base de données
+  # Adminer - Interface DB
   adminer:
     image: adminer:4.8.1
     container_name: logodouman-adminer
@@ -117,13 +115,9 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
   backend_uploads:
-    driver: local
   backend_logs:
-    driver: local
 
 networks:
   logodouman-network:

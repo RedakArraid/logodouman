@@ -10,6 +10,9 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "fix:prisma": "node fix-prisma.js",
+    "setup": "node fix-prisma.js && npm run migrate",
+    "reset": "prisma db push --force-reset && npm run migrate",
     "test": "jest",
     "lint": "eslint src/",
     "format": "prettier --write src/"

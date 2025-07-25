@@ -11,6 +11,7 @@
     "dev:backend": "cd backend && npm run dev",
     
     "docker:build": "docker-compose build --no-cache",
+    "docker:setup": "chmod +x start-complete.sh && ./start-complete.sh",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:restart": "docker-compose restart",

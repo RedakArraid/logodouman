@@ -62,7 +62,7 @@ export default function BoutiquePage() {
   const { getActiveProducts, getActiveCategories, isHydrated } = useStore();
   
   // États des filtres - tous déclarés en premier
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(50000);
   const [sortBy, setSortBy] = useState('name');
@@ -97,17 +97,14 @@ export default function BoutiquePage() {
     if (!isHydrated || products.length === 0) return [];
 
     let filtered = products.filter(product => {
-      // Filtre par catégorie
-      const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
-      
+      // Filtre par catégories multiples
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.categoryId);
       // Filtre par prix
       const priceMatch = product.price >= minPrice && product.price <= maxPrice;
-      
       // Filtre par recherche
       const searchMatch = searchQuery === '' || 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
       return categoryMatch && priceMatch && searchMatch;
     });
 
@@ -124,10 +121,10 @@ export default function BoutiquePage() {
       default:
         return filtered;
     }
-  }, [isHydrated, products, selectedCategory, minPrice, maxPrice, searchQuery, sortBy]);
+  }, [isHydrated, products, selectedCategories, minPrice, maxPrice, searchQuery, sortBy]);
 
   const resetFilters = () => {
-    setSelectedCategory('all');
+    setSelectedCategories([]);
     setMinPrice(priceStats.min);
     setMaxPrice(priceStats.max);
     setSearchQuery('');
@@ -238,10 +235,9 @@ export default function BoutiquePage() {
                   <div className="space-y-2">
                     <label className="flex items-center cursor-pointer">
                       <input
-                        type="radio"
-                        name="category"
-                        checked={selectedCategory === 'all'}
-                        onChange={() => setSelectedCategory('all')}
+                        type="checkbox"
+                        checked={selectedCategories.length === 0}
+                        onChange={() => setSelectedCategories([])}
                         className="mr-3 text-gray-600"
                       />
                       <span className="text-sm text-gray-600">
@@ -253,10 +249,15 @@ export default function BoutiquePage() {
                       return (
                         <label key={category.id} className="flex items-center cursor-pointer">
                           <input
-                            type="radio"
-                            name="category"
-                            checked={selectedCategory === category.id}
-                            onChange={() => setSelectedCategory(category.id)}
+                            type="checkbox"
+                            checked={selectedCategories.includes(category.id)}
+                            onChange={() => {
+                              if (selectedCategories.includes(category.id)) {
+                                setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                              } else {
+                                setSelectedCategories([...selectedCategories, category.id]);
+                              }
+                            }}
                             className="mr-3 text-gray-600"
                           />
                           <span className="text-sm text-gray-600">
@@ -335,9 +336,9 @@ export default function BoutiquePage() {
                   <h2 className="text-lg font-semibold text-gray-900">
                     {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
                   </h2>
-                  {selectedCategory !== 'all' && (
+                  {selectedCategories.length > 0 && (
                     <p className="text-sm text-gray-600">
-                      dans {categories.find(c => c.id === selectedCategory)?.name}
+                      dans {selectedCategories.map(id => categories.find(c => c.id === id)?.name).join(', ')}
                     </p>
                   )}
                 </div>
@@ -471,7 +472,7 @@ export default function BoutiquePage() {
                 {categories.slice(0, 4).map(category => (
                   <li key={category.id}>
                     <button 
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => setSelectedCategories([category.id])}
                       className="hover:text-white transition-colors text-left"
                     >
                       {category.name}

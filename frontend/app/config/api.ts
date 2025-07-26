@@ -162,4 +162,179 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
+
+// Services spécialisés avec fallback automatique
+export class ProductService {
+  static async getAll() {
+    try {
+      const response = await apiService.get('/api/products');
+      return response.products || response || [];
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+      return apiService.getFallbackProducts().products || [];
+    }
+  }
+
+  static async getById(id: string) {
+    try {
+      const response = await apiService.get(`/api/products/${id}`);
+      return response.product || response;
+    } catch (error) {
+      console.error('Erreur lors du chargement du produit:', error);
+      // Fallback: chercher dans les données locales
+      const fallbackProducts = apiService.getFallbackProducts().products || [];
+      return fallbackProducts.find(p => p.id.toString() === id) || null;
+    }
+  }
+
+  static async create(productData: any) {
+    try {
+      const response = await apiService.post('/api/products', productData);
+      return response.product || response;
+    } catch (error) {
+      console.error('Erreur lors de la création du produit:', error);
+      throw error;
+    }
+  }
+
+  static async update(id: string, productData: any) {
+    try {
+      const response = await apiService.put(`/api/products/${id}`, productData);
+      return response.product || response;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du produit:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id: string) {
+    try {
+      return await apiService.delete(`/api/products/${id}`);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du produit:', error);
+      throw error;
+    }
+  }
+}
+
+export class CategoryService {
+  static async getAll() {
+    try {
+      const response = await apiService.get('/api/categories');
+      return response.categories || response || [];
+    } catch (error) {
+      console.error('Erreur lors du chargement des catégories:', error);
+      return [
+        {
+          id: "cat-001-luxury",
+          name: "Luxury",
+          description: "Sacs de luxe et accessoires premium",
+          image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop"
+        },
+        {
+          id: "cat-002-vintage",
+          name: "Vintage",
+          description: "Sacs vintage et rétro authentiques",
+          image: "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=400&h=300&fit=crop"
+        },
+        {
+          id: "cat-003-business",
+          name: "Business",
+          description: "Sacs professionnels et élégants",
+          image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop"
+        },
+        {
+          id: "cat-004-casual",
+          name: "Casual",
+          description: "Sacs décontractés et quotidiens",
+          image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
+        }
+      ];
+    }
+  }
+
+  static async getById(id: string) {
+    try {
+      const response = await apiService.get(`/api/categories/${id}`);
+      return response.category || response;
+    } catch (error) {
+      console.error('Erreur lors du chargement de la catégorie:', error);
+      return null;
+    }
+  }
+
+  static async create(categoryData: any) {
+    try {
+      const response = await apiService.post('/api/categories', categoryData);
+      return response.category || response;
+    } catch (error) {
+      console.error('Erreur lors de la création de la catégorie:', error);
+      throw error;
+    }
+  }
+
+  static async update(id: string, categoryData: any) {
+    try {
+      const response = await apiService.put(`/api/categories/${id}`, categoryData);
+      return response.category || response;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la catégorie:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id: string) {
+    try {
+      return await apiService.delete(`/api/categories/${id}`);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la catégorie:', error);
+      throw error;
+    }
+  }
+}
+
+export class AuthService {
+  static async login(email: string, password: string) {
+    try {
+      const response = await apiService.post('/api/auth/login', { email, password });
+      if (response.token) {
+        apiService.setAuthToken(response.token);
+      }
+      return response;
+    } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
+      throw error;
+    }
+  }
+
+  static async verify() {
+    try {
+      const response = await apiService.get('/api/auth/verify');
+      return response;
+    } catch (error) {
+      console.error('Erreur lors de la vérification du token:', error);
+      apiService.removeAuthToken();
+      throw error;
+    }
+  }
+
+  static async logout() {
+    try {
+      await apiService.post('/api/auth/logout');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    } finally {
+      apiService.removeAuthToken();
+    }
+  }
+
+  static isAuthenticated(): boolean {
+    return !!apiService.getAuthToken();
+  }
+
+  static getToken(): string | null {
+    return apiService.getAuthToken();
+  }
+}
+
 export default apiService;

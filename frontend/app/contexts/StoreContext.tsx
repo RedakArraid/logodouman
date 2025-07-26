@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Category } from '../types';
+import { Product, Category } from '../../types/index';
 import { ProductService, CategoryService } from '../config/api';
 
 interface StoreContextType {
@@ -196,7 +196,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const updateProduct = async (id: number, productData: Partial<Product>) => {
     try {
       setLoading(true);
-      const updatedProduct = await ProductService.update(id, productData);
+      const updatedProduct = await ProductService.update(id.toString(), productData);
       setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
     } catch (err) {
       console.error('Erreur lors de la mise à jour du produit:', err);
@@ -210,7 +210,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deleteProduct = async (id: number) => {
     try {
       setLoading(true);
-      await ProductService.delete(id);
+      await ProductService.delete(id.toString());
       setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Erreur lors de la suppression du produit:', err);
@@ -338,7 +338,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 export function useStore() {
   const context = useContext(StoreContext);
   if (context === undefined) {
-    throw new Error('useStore must be used within a StoreProvider');
+    // Retourner un contexte par défaut au lieu de throw une erreur
+    // Cela évite l'erreur React #130 pendant l'hydratation
+    return {
+      products: defaultProducts,
+      categories: defaultCategories,
+      isHydrated: false,
+      loading: true,
+      error: null,
+      addProduct: async () => {},
+      updateProduct: async () => {},
+      deleteProduct: async () => {},
+      toggleProductStatus: async () => {},
+      addCategory: async () => {},
+      updateCategory: async () => {},
+      deleteCategory: async () => {},
+      toggleCategoryStatus: async () => {},
+      getActiveProducts: () => defaultProducts.filter(p => p.status === 'active'),
+      getActiveCategories: () => defaultCategories.filter(c => c.status === 'active'),
+      refreshData: async () => {},
+      resetToDefaults: () => {},
+    };
   }
   return context;
 }

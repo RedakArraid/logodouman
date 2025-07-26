@@ -18,8 +18,18 @@ import CategoriesManager from '../components/CategoriesManager';
 import KPIGrid from '../components/KPIGrid';
 import SalesCharts from '../components/SalesCharts';
 import AlertsManager from '../components/AlertsManager';
-import { DashboardService, CategoryService } from '../../config/api';
-import { Category } from '../../types';
+import { apiService, CategoryService } from '../../config/api';
+
+// Interface Category définie localement
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  image?: string;
+  status: 'active' | 'inactive';
+  productCount?: number;
+}
 
 // Types
 interface User {

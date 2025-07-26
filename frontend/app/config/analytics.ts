@@ -1,4 +1,4 @@
-import { ApiClient } from './api';
+import { apiService } from './api';
 
 export interface AnalyticsData {
   sales: {
@@ -50,35 +50,35 @@ export interface TimeRange {
 export const AnalyticsService = {
   // Données générales du dashboard
   getDashboardOverview: (timeRange: TimeRange): Promise<AnalyticsData> =>
-    ApiClient.get(`/api/analytics/overview?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
+    apiService.get(`/api/analytics/overview?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
 
   // Données de ventes détaillées
   getSalesAnalytics: (timeRange: TimeRange) =>
-    ApiClient.get(`/api/analytics/sales?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
+    apiService.get(`/api/analytics/sales?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
 
   // Analytics clients
   getCustomerAnalytics: (timeRange: TimeRange) =>
-    ApiClient.get(`/api/analytics/customers?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
+    apiService.get(`/api/analytics/customers?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
 
   // Analytics inventaire
   getInventoryAnalytics: (timeRange: TimeRange) =>
-    ApiClient.get(`/api/analytics/inventory?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
+    apiService.get(`/api/analytics/inventory?period=${timeRange.period}&start=${timeRange.startDate || ''}&end=${timeRange.endDate || ''}`),
 
   // Alertes
   getAlerts: (filters?: { type?: string; priority?: string }) =>
-    ApiClient.get(`/api/analytics/alerts?${new URLSearchParams(filters || {})}`),
+    apiService.get(`/api/analytics/alerts?${new URLSearchParams(filters || {})}`),
 
   // Marquer une alerte comme lue
   markAlertAsRead: (alertId: string) =>
-    ApiClient.patch(`/api/analytics/alerts/${alertId}/read`),
+    apiService.put(`/api/analytics/alerts/${alertId}/read`),
 
   // Données temps réel
   getRealTimeMetrics: () =>
-    ApiClient.get('/api/analytics/realtime'),
+    apiService.get('/api/analytics/realtime'),
 
   // Export des données
   exportAnalytics: (type: 'sales' | 'customers' | 'inventory', timeRange: TimeRange, format: 'csv' | 'excel' | 'pdf') =>
-    ApiClient.get(`/api/analytics/export/${type}?period=${timeRange.period}&format=${format}`, { responseType: 'blob' }),
+    apiService.get(`/api/analytics/export/${type}?period=${timeRange.period}&format=${format}`),
 };
 
 // Utilitaires de formatage

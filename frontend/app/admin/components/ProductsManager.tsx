@@ -11,7 +11,34 @@ import {
   PhotoIcon
 } from '@heroicons/react/24/outline';
 import { ProductService } from '../../config/api';
-import { Product, Category } from '../../types';
+
+// Interfaces définies localement
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  categoryId: string;
+  description: string;
+  stock: number;
+  image?: string;
+  sku?: string;
+  material?: string;
+  dimensions?: string;
+  weight?: number;
+  colors?: string[];
+  features?: string[];
+  status: 'active' | 'inactive';
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  image?: string;
+  status: 'active' | 'inactive';
+  productCount?: number;
+}
 
 interface ProductsManagerProps {
   categories: Category[];
@@ -23,7 +50,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // États du formulaire
   const [formData, setFormData] = useState({
@@ -136,7 +163,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
   };
 
   // Supprimer un produit
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;

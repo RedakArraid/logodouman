@@ -1,48 +1,82 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuration Docker optimisée
+  // 🐳 Configuration Docker optimisée
   output: 'standalone',
   
-  // Configuration expérimentale
-  experimental: {
-    // Désactivé car deprecated dans Next.js 14
-    // appDir: true,
-  },
-  
-  // Configuration des images pour Docker
+  // 🖼️ Configuration des images
   images: {
-    domains: ['images.unsplash.com', 'localhost'],
-    unoptimized: process.env.NODE_ENV === 'development',
+    domains: ['images.unsplash.com', 'localhost', '127.0.0.1'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '4002',
+        pathname: '/uploads/**',
+      },
+    ],
+    unoptimized: false,
   },
   
-  // Configuration ESLint et TypeScript pour Docker
+  // 🔧 Configuration ESLint et TypeScript pour Docker
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
+    dirs: ['app', 'pages', 'components', 'lib', 'src'],
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
-  // Configuration pour les redirections
-  async redirects() {
+  // 🌐 Configuration des rewrites pour l'API
+  async rewrites() {
     return [
       {
-        source: '/admin',
-        destination: '/admin/dashboard',
-        permanent: false,
-        has: [
-          {
-            type: 'cookie',
-            key: 'admin_token',
-          },
-        ],
+        source: '/api/:path*',
+        destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002'}/:path*`,
       },
     ];
   },
   
-  // Configuration des headers de sécurité
+  // 🔄 Configuration des redirections
+  async redirects() {
+    return [
+      {
+        source: '/admin',
+        destination: '/admin/login',
+        permanent: false,
+      },
+    ];
+  },
+  
+  // 🔒 Configuration des headers de sécurité
   async headers() {
     return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
       {
         source: '/api/:path*',
         headers: [
@@ -56,31 +90,50 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
+            value: 'Content-Type, Authorization, X-Requested-With',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
           },
         ],
       },
     ];
   },
   
-  // Configuration pour Docker
+  // 🔧 Configuration expérimentale
+  experimental: {
+    // Optimisations pour Docker
+    outputFileTracingRoot: '/app',
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+  
+  // 📦 Configuration Webpack pour Docker
+  webpack: (config, { isServer }) => {
+    // Optimisations pour l'environnement containerisé
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('@prisma/client');
+    }
+    
+    return config;
+  },
+  
+  // 🌍 Variables d'environnement publiques
   env: {
-    DOCKER_ENV: process.env.DOCKER_ENV || 'false',
+    CUSTOM_KEY: 'logodouman',
+    DOCKER_ENV: process.env.DOCKER_ENV || 'true',
   },
   
-  // Configuration du serveur pour Docker
-  serverRuntimeConfig: {
-    // Variables côté serveur uniquement
-    API_URL: process.env.NODE_ENV === 'production' 
-      ? 'http://backend:4002' 
-      : 'http://localhost:4002',
-  },
+  // ⚡ Configuration des performances
+  compress: true,
+  poweredByHeader: false,
   
-  publicRuntimeConfig: {
-    // Variables exposées côté client
-    API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002',
-    SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  },
+  // 🔍 Configuration de traçabilité
+  trailingSlash: false,
+  
+  // 📱 Configuration PWA (si nécessaire)
+  swcMinify: true,
 }
 
 module.exports = nextConfig

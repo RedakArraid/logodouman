@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './styles.css'
 import { StoreProvider } from './contexts/StoreContext'
 
@@ -7,7 +7,11 @@ export const metadata: Metadata = {
   description: 'Découvrez notre sélection de produits de qualité : mode, sacs, électronique et décoration. Shopping en ligne simple et sécurisé.',
   keywords: 'e-commerce, shopping, mode, sacs, électronique, décoration, LogoDouman',
   authors: [{ name: 'LogoDouman Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

@@ -5,8 +5,8 @@ import {
   ShoppingBagIcon,
   UsersIcon,
   CubeIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { formatCurrency, formatNumber, formatPercentage, getGrowthColor } from '../../config/analytics';
@@ -42,8 +42,8 @@ const KPICard: React.FC<KPICardProps> = ({
 }) => {
   const getTrendIcon = () => {
     if (growth === undefined) return null;
-    if (growth > 0) return <TrendingUpIcon className="w-4 h-4 text-green-500" />;
-    if (growth < 0) return <TrendingDownIcon className="w-4 h-4 text-red-500" />;
+    if (growth > 0) return <ArrowTrendingUpIcon className="w-4 h-4 text-green-500" />;
+    if (growth < 0) return <ArrowTrendingDownIcon className="w-4 h-4 text-red-500" />;
     return <ArrowRightIcon className="w-4 h-4 text-gray-500" />;
   };
 

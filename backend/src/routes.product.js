@@ -11,7 +11,7 @@ const { requireAuth, requireAdmin, requireRole } = require('./middleware.auth');
 const productSchema = z.object({
   name: z.string().min(1),
   price: z.number().int().nonnegative(),
-  categoryId: z.string().uuid(),
+  categoryId: z.string().min(1),
   image: z.string().optional(),
   description: z.string().optional(),
   stock: z.number().int().nonnegative().optional(),

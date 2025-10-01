@@ -7,13 +7,17 @@ interface ImageUploadProps {
   onImageChange: (imageUrl: string) => void;
   placeholder?: string;
   accept?: string;
+  maxSize?: number;
+  type?: string;
 }
 
 export default function ImageUpload({
   currentImage,
   onImageChange,
   placeholder = "Choisir une image",
-  accept = "image/*"
+  accept = "image/*",
+  maxSize = 10 * 1024 * 1024, // 10MB
+  type = "image/*"
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string>(currentImage || '');
   const [isDragging, setIsDragging] = useState(false);

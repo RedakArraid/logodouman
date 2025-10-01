@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ImageUpload from '../components/ImageUpload';
-import { ImageUploadService } from '../config/api';
+import  ImageUploadService  from '../config/api';
 
 export default function TestUploadPage() {
   const [productImage, setProductImage] = useState('');

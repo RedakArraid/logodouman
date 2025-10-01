@@ -76,15 +76,17 @@ fi
 # 🔧 Configuration Prisma
 echo "${BLUE}🔧 Configuration Prisma...${NC}"
 
-# 📦 Générer le client Prisma (au cas où)
-echo "${BLUE}📦 Génération du client Prisma...${NC}"
-if ! npx prisma generate; then
-    echo "${RED}❌ Erreur lors de la génération du client Prisma${NC}"
-    exit 1
-fi
+
 
 # 📊 Synchroniser la base de données avec gestion d'erreur robuste
 echo "${BLUE}📊 Synchronisation de la base de données...${NC}"
+
+if npx prisma migrate deploy; then
+    echo "${GREEN}✅ Migrations Prisma appliquées${NC}"
+else
+    echo "${RED}❌ Erreur lors de l'application des migrations${NC}"
+    exit 1
+fi
 
 # Tentative 1: Push simple
 if npx prisma db push --accept-data-loss --skip-generate 2>/dev/null; then

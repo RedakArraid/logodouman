@@ -56,11 +56,26 @@ fi
 
 echo "${GREEN}✅ Variables d'environnement OK${NC}"
 
+# 🔍 Détecter les noms d'hôtes (compatible docker-compose standard et personnalisé)
+DB_HOST=${DB_HOST:-postgres}
+REDIS_HOST=${REDIS_HOST:-redis}
+
+# Extraction depuis DATABASE_URL si présent
+if [ -n "$DATABASE_URL" ]; then
+    DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
+fi
+
+if [ -n "$REDIS_URL" ]; then
+    REDIS_HOST=$(echo "$REDIS_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p' | sed 's/:.*//') 
+fi
+
+echo "${BLUE}📡 Connexion à: DB=$DB_HOST, Redis=$REDIS_HOST${NC}"
+
 # 🗄️ Attendre PostgreSQL avec une stratégie robuste
-wait_for_service "postgres" "5432" "PostgreSQL" 90
+wait_for_service "$DB_HOST" "5432" "PostgreSQL" 90
 
 # 🔴 Attendre Redis
-wait_for_service "redis" "6379" "Redis" 60
+wait_for_service "$REDIS_HOST" "6379" "Redis" 60
 
 # 🕒 Attente supplémentaire pour s'assurer que PostgreSQL est vraiment prêt
 echo "${BLUE}⏳ Attente supplémentaire pour PostgreSQL (10s)...${NC}"
@@ -68,7 +83,7 @@ sleep 10
 
 # 🧪 Test de connexion à la base de données
 echo "${BLUE}🧪 Test de connexion à la base de données...${NC}"
-if ! timeout 30 sh -c 'until nc -z postgres 5432; do sleep 1; done'; then
+if ! timeout 30 sh -c "until nc -z $DB_HOST 5432; do sleep 1; done"; then
     echo "${RED}❌ Impossible de se connecter à PostgreSQL${NC}"
     exit 1
 fi

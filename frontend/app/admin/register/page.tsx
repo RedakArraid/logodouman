@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { EyeIcon, EyeSlashIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002';
+
 interface RegisterForm {
   name: string;
   email: string;
@@ -60,7 +62,7 @@ export default function AdminRegister() {
     setIsLoading(true);
     
     try {
-      const res = await fetch('http://localhost:4002/api/auth/signup', {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

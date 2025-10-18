@@ -5,7 +5,7 @@ const nextConfig = {
   
   // 🖼️ Configuration des images
   images: {
-    domains: ['images.unsplash.com', 'localhost', '127.0.0.1'],
+    domains: ['images.unsplash.com', 'localhost', '127.0.0.1', 'apilogodouman.genea.space', 'logodouman-backend'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -16,6 +16,18 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
+        port: '4002',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'apilogodouman.genea.space',
+        port: '',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'logodouman-backend',
         port: '4002',
         pathname: '/uploads/**',
       },
@@ -82,11 +94,11 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: process.env.CORS_ORIGIN || 'http://localhost:3000',
+            value: process.env.NEXT_PUBLIC_SITE_URL || process.env.CORS_ORIGIN || 'http://localhost:3000',
           },
           {
             key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
+            value: 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
           },
           {
             key: 'Access-Control-Allow-Headers',

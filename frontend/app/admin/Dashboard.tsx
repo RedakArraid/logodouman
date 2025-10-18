@@ -14,6 +14,8 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002';
+
 export default function Dashboard({ token }: { token: string }) {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,7 @@ export default function Dashboard({ token }: { token: string }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch('http://localhost:4002/api/dashboard', {
+    fetch(`${API_URL}/api/dashboard`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())

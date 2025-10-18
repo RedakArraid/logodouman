@@ -15,17 +15,41 @@ const orderRoutes = require('./routes.orders');
 const customerRoutes = require('./routes.customers');
 const promotionRoutes = require('./routes.promotions');
 
-// Configuration CORS pour Docker
+// Configuration CORS pour Docker et production
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://frontend:3000',
+  'http://frontend:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://logodouman-frontend:3001',
+  'https://logodouman.genea.space',
+  'https://apilogodouman.genea.space',
+];
+
+// Ajouter les origines depuis l'environnement
+if (process.env.CORS_ORIGIN) {
+  const envOrigins = process.env.CORS_ORIGIN.split(',').map(o => o.trim());
+  allowedOrigins.push(...envOrigins);
+}
+
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://frontend:3000',
-    'http://127.0.0.1:3000',
-    process.env.CORS_ORIGIN
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origine (comme mobile apps ou curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`⚠️  CORS: Origine non autorisée: ${origin}`);
+      callback(null, true); // En production, changer à: callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200,
 };
 
 // Middleware

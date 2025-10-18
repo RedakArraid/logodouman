@@ -3,6 +3,8 @@
 import { useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002';
+
 interface AuthGuardProps {
   children: ReactNode;
 }
@@ -23,7 +25,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         }
 
         // Vérifier le token avec l'API
-        const response = await fetch('http://localhost:4002/api/auth/verify', {
+        const response = await fetch(`${API_URL}/api/auth/verify`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

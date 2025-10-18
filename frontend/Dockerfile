@@ -46,7 +46,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=${PORT:-3000}
 ENV HOSTNAME=0.0.0.0
 
 # 👤 Créer un utilisateur non-root pour la sécurité
@@ -71,12 +71,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 # 👤 Utiliser l'utilisateur non-root
 USER nextjs
 
-# 🔍 Health check optimisé
+# 🔍 Health check - Le port sera celui défini dans l'ENV
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+  CMD sh -c 'wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}' || exit 1
 
-# 🚀 Exposer le port
-EXPOSE 3000
+# 🚀 Exposer les ports possibles (3000 et 3001)
+EXPOSE 3000 3001
 
 # 🎯 Commande de démarrage
 CMD ["node", "server.js"]

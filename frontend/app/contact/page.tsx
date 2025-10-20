@@ -1,246 +1,282 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold text-gray-900">LogoDouman</Link>
-            <span className="ml-2 text-sm text-gray-500">Côte d'Ivoire</span>
-          </div>
-
-          <nav className="hidden md:flex space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors">Accueil</Link>
-            <Link href="/boutique" className="text-gray-700 hover:text-gray-900 transition-colors">Boutique</Link>
-            <Link href="/blog" className="text-gray-700 hover:text-gray-900 transition-colors">Blog</Link>
-            <Link href="/contact" className="text-gray-900 font-medium">Nous contacter</Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <Link href="/admin" className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium">
-              ⚙️ Admin
-            </Link>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100">
-            <nav className="flex flex-col space-y-2">
-              <Link href="/" className="py-2 text-gray-700 hover:text-gray-900">Accueil</Link>
-              <Link href="/boutique" className="py-2 text-gray-700 hover:text-gray-900">Boutique</Link>
-              <Link href="/blog" className="py-2 text-gray-700 hover:text-gray-900">Blog</Link>
-              <Link href="/contact" className="py-2 text-gray-900 font-medium">Nous contacter</Link>
-            </nav>
-          </div>
-        )}
-      </div>
-    </header>
-  );
-};
+import PublicHeader from '../components/PublicHeader';
+import PublicFooter from '../components/PublicFooter';
+import { 
+  MapPinIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  ClockIcon,
+  ChatBubbleLeftRightIcon,
+  PaperAirplaneIcon
+} from '@heroicons/react/24/outline';
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Ici vous pouvez envoyer à votre API
+    console.log('Form submitted:', formData);
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    }, 3000);
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-          <div className="text-center">
-            <div className="text-6xl mb-6">✅</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Merci pour votre envoi !</h2>
-            <p className="text-xl text-gray-600">Votre message a été envoyé avec succès.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30">
+      <PublicHeader />
       
-      <section className="bg-gradient-to-br from-gray-50 to-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Nous Contacter</h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Une question ? Un conseil personnalisé ? Notre équipe est là pour vous accompagner.
+      {/* Hero */}
+      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-orange-500/20 px-4 py-2 rounded-full mb-6 backdrop-blur-sm border border-orange-400/30">
+              <ChatBubbleLeftRightIcon className="w-5 h-5 text-orange-400" />
+              <span className="text-orange-200 font-semibold">Nous sommes là pour vous</span>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-orange-100 to-white bg-clip-text text-transparent">
+              Contactez-Nous
+            </h1>
+            <p className="text-xl text-gray-300">
+              Une question ? Besoin d'aide ? Notre équipe est à votre écoute
             </p>
-            <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
-              📍 Abidjan, Côte d'Ivoire
-            </span>
           </div>
         </div>
       </section>
 
+      {/* Contenu Principal */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Envoyez-nous un message</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
-                    placeholder="Nom complet"
-                  />
-                  <input
-                    type="email"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
-                    placeholder="Email"
-                  />
-                </div>
-                
-                <select required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500">
-                  <option value="">Sélectionner un sujet</option>
-                  <option value="info">Information produit</option>
-                  <option value="commande">Question sur commande</option>
-                  <option value="conseil">Conseil personnalisé</option>
-                  <option value="autre">Autre</option>
-                </select>
-                
-                <textarea
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
-                  placeholder="Décrivez votre demande..."
-                />
-                
-                <button
-                  type="submit"
-                  className="w-full bg-gray-900 text-white py-4 rounded-lg hover:bg-gray-800 transition-colors font-medium"
-                >
-                  Envoyer le message
-                </button>
-              </form>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Informations de contact */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Informations
+                </h2>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Nos coordonnées</h2>
-              
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center text-white text-xl">📍</div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Adresse</h3>
-                      <p className="text-gray-600">Abidjan, Côte d'Ivoire</p>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MapPinIcon className="w-6 h-6 text-orange-600" />
                     </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center text-white text-xl">📧</div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Email</h3>
-                      <p className="text-gray-600">contact@logodouman.com</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center text-white text-xl">📱</div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Téléphone</h3>
-                      <p className="text-gray-600">+225 XX XX XX XX XX</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center text-white text-xl">🕒</div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Horaires</h3>
+                      <h3 className="font-bold text-gray-900 mb-1">Adresse</h3>
                       <p className="text-gray-600">
-                        Lundi - Vendredi: 9h00 - 18h00<br />
-                        Samedi: 9h00 - 16h00
+                        Abidjan, Plateau<br />
+                        Côte d'Ivoire
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <EnvelopeIcon className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-1">Email</h3>
+                      <a href="mailto:contact@logodouman.com" className="text-orange-600 hover:text-orange-700 font-semibold">
+                        contact@logodouman.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <PhoneIcon className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-1">Téléphone</h3>
+                      <p className="text-gray-600">
+                        +225 XX XX XX XX XX
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <ClockIcon className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-1">Horaires</h3>
+                      <p className="text-gray-600">
+                        Lun - Sam : 9h - 18h<br />
+                        Dimanche : Fermé
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Questions fréquentes</h3>
-                <div className="space-y-4">
-                  <div className="border-l-4 border-gray-200 pl-4">
-                    <h4 className="font-medium text-gray-900">Délai de livraison ?</h4>
-                    <p className="text-sm text-gray-600">2-5 jours ouvrés sur Abidjan</p>
-                  </div>
-                  <div className="border-l-4 border-gray-200 pl-4">
-                    <h4 className="font-medium text-gray-900">Politique de retour ?</h4>
-                    <p className="text-sm text-gray-600">Retour sous 14 jours</p>
-                  </div>
+
+              {/* Réseaux sociaux */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-8 text-white">
+                <h3 className="text-xl font-bold mb-4">Suivez-nous</h3>
+                <div className="flex gap-3">
+                  <a href="#" className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all hover:scale-110">
+                    <span className="text-2xl">📘</span>
+                  </a>
+                  <a href="#" className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all hover:scale-110">
+                    <span className="text-2xl">📸</span>
+                  </a>
+                  <a href="#" className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all hover:scale-110">
+                    <span className="text-2xl">🐦</span>
+                  </a>
+                  <a href="#" className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all hover:scale-110">
+                    <span className="text-2xl">💼</span>
+                  </a>
                 </div>
+              </div>
+            </div>
+
+            {/* Formulaire de contact */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Envoyez-nous un message
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais
+                </p>
+
+                {submitted ? (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-8 text-center">
+                    <div className="text-6xl mb-4">✅</div>
+                    <h3 className="text-2xl font-bold text-green-800 mb-2">
+                      Message envoyé !
+                    </h3>
+                    <p className="text-green-700">
+                      Merci pour votre message. Nous vous répondrons très bientôt.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Nom complet *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Jean Kouassi"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Email *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="jean@example.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Téléphone
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="+225 XX XX XX XX XX"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Sujet *
+                        </label>
+                        <select
+                          required
+                          value={formData.subject}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        >
+                          <option value="">Sélectionnez un sujet</option>
+                          <option value="info">Demande d'information</option>
+                          <option value="commande">Question sur une commande</option>
+                          <option value="produit">Question sur un produit</option>
+                          <option value="partenariat">Partenariat</option>
+                          <option value="autre">Autre</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Message *
+                      </label>
+                      <textarea
+                        required
+                        rows={6}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all resize-none"
+                        placeholder="Décrivez votre demande..."
+                      />
+                    </div>
+
+                    <div>
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all font-bold shadow-lg hover:shadow-xl hover:scale-105"
+                      >
+                        <PaperAirplaneIcon className="w-5 h-5" />
+                        Envoyer le message
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="bg-gray-900 text-white py-12">
+      {/* Map */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">LogoDouman</h3>
-              <p className="text-gray-400">Sacs à main de qualité premium en Côte d'Ivoire.</p>
+          <div className="bg-gray-100 rounded-2xl overflow-hidden shadow-lg border border-gray-200 h-96 flex items-center justify-center">
+            <div className="text-center">
+              <MapPinIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 font-semibold">
+                Carte interactive - À venir
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                📍 Abidjan, Plateau, Côte d'Ivoire
+              </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/" className="hover:text-white">Accueil</Link></li>
-                <li><Link href="/boutique" className="hover:text-white">Boutique</Link></li>
-                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">FAQ</a></li>
-                <li><a href="#" className="hover:text-white">Livraison</a></li>
-                <li><a href="#" className="hover:text-white">Retours</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>📍 Abidjan, Côte d'Ivoire</li>
-                <li>📧 contact@logodouman.com</li>
-                <li>📱 +225 XX XX XX XX XX</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 LogoDouman. Tous droits réservés. | Côte d'Ivoire</p>
           </div>
         </div>
-      </footer>
+      </section>
+
+      <PublicFooter />
     </div>
   );
 }

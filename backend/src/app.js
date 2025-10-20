@@ -2,9 +2,14 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const path = require('path');
+const { checkConfiguration } = require('./services/cloudinary.service');
 
 const app = express();
 const PORT = process.env.PORT || 4002;
+
+// Vérifier la configuration Cloudinary au démarrage
+console.log('\n🔍 Vérification de la configuration Cloudinary...');
+checkConfiguration();
 
 // Import des routes
 const productRoutes = require('./routes.product');

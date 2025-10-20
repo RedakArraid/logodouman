@@ -83,12 +83,14 @@ export const AnalyticsService = {
 
 // Utilitaires de formatage
 export const formatCurrency = (amount: number): string => {
+  // Les montants en BDD sont déjà en centimes
+  // On affiche en FCFA (1€ = 656 FCFA environ, mais ici on garde les centimes)
+  const amountInFCFA = amount; // Déjà en centimes, on les affiche comme des FCFA
   return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
+    style: 'decimal',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount / 100); // Conversion centimes → euros
+    maximumFractionDigits: 0,
+  }).format(amountInFCFA) + ' F';
 };
 
 export const formatNumber = (number: number): string => {

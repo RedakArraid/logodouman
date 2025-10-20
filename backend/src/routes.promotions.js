@@ -205,7 +205,7 @@ router.post('/validate', requireAuth, async (req, res) => {
     // Vérifier le montant minimum
     if (promotion.minAmount && orderAmount < promotion.minAmount) {
       return res.status(400).json({ 
-        error: `Montant minimum requis: ${promotion.minAmount}€` 
+        error: `Montant minimum requis: ${promotion.minAmount / 100} FCFA` 
       });
     }
 

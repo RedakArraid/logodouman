@@ -326,7 +326,7 @@ router.get('/analytics/segmentation', requireAuth, requireRole(['admin', 'manage
     ] = await Promise.all([
       // Total clients
       db.customer.count(),
-      // Clients à haute valeur (>1000€ dépensés)
+      // Clients à haute valeur (>650,000 FCFA dépensés)
       db.customer.count({
         where: { totalSpent: { gt: 1000 } }
       }),

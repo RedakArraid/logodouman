@@ -85,7 +85,7 @@ async function main() {
     const products = [
       {
         name: "Sac à main verni brillant avec anneau de levage",
-        price: 1500000, // 150.00€ en centimes
+        price: 10000000, // 100,000 FCFA en centimes
         categoryId: "luxury-cat-001",
         image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
         description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
@@ -111,7 +111,7 @@ async function main() {
       },
       {
         name: "Sac imprimé géométrique vintage léger tendance",
-        price: 1250000, // 125.00€ en centimes
+        price: 8000000, // 80,000 FCFA en centimes
         categoryId: "vintage-cat-002",
         image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
         description: "Sac tendance avec motifs géométriques vintage, léger et pratique pour un look moderne",
@@ -137,7 +137,7 @@ async function main() {
       },
       {
         name: "Sac à dos d'ordinateur résistant à l'eau antivol",
-        price: 1800000, // 180.00€ en centimes
+        price: 12000000, // 120,000 FCFA en centimes
         categoryId: "business-cat-003",
         image: "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=400&h=400&fit=crop&crop=center",
         description: "Sac à dos professionnel antivol avec protection contre l'eau pour ordinateur portable",
@@ -163,7 +163,7 @@ async function main() {
       },
       {
         name: "Sac bandoulière compact quotidien",
-        price: 950000, // 95.00€ en centimes
+        price: 6000000, // 60,000 FCFA en centimes
         categoryId: "casual-cat-005",
         image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
         description: "Sac bandoulière compact et pratique pour le quotidien, design moderne et fonctionnel",
@@ -220,7 +220,7 @@ async function main() {
           firstName: 'Marie',
           lastName: 'Dupont',
           phone: '+225 07 12 34 56 78',
-          totalSpent: 280000, // 280.00€ en centimes
+          totalSpent: 18000000, // 180,000 FCFA en centimes
           loyaltyPoints: 140,
           status: 'active'
         }
@@ -231,7 +231,7 @@ async function main() {
           firstName: 'Jean',
           lastName: 'Kouassi',
           phone: '+225 05 98 76 54 32',
-          totalSpent: 150000, // 150.00€ en centimes
+          totalSpent: 10000000, // 100,000 FCFA en centimes
           loyaltyPoints: 75,
           status: 'active'
         }
@@ -273,7 +273,7 @@ async function main() {
           description: 'Offre de bienvenue pour les nouveaux clients',
           type: 'PERCENTAGE',
           value: 20, // 20%
-          minAmount: 10000, // 100.00€ minimum
+          minAmount: 6500000, // 65,000 FCFA minimum
           maxUses: 100,
           usedCount: 15,
           startDate: new Date('2024-01-01'),
@@ -288,7 +288,7 @@ async function main() {
           description: 'Livraison gratuite pour toute commande',
           type: 'FREE_SHIPPING',
           value: 0,
-          minAmount: 5000, // 50.00€ minimum
+          minAmount: 3300000, // 33,000 FCFA minimum
           maxUses: null, // illimité
           usedCount: 42,
           startDate: new Date('2024-01-01'),
@@ -308,7 +308,7 @@ async function main() {
         customerId: customers[0].id,
         userId: admin.id,
         status: 'CONFIRMED',
-        totalAmount: 150000, // 150.00€
+        totalAmount: 10000000, // 100,000 FCFA
         taxAmount: 0,
         shippingCost: 0,
         discountAmount: 0,

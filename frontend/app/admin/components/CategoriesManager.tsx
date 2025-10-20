@@ -96,14 +96,14 @@ export default function CategoriesManager({ onCategoryChange }: CategoriesManage
     setLoading(true);
 
     try {
-      const categoryData = {
-        ...formData,
-        id: editingCategory?.id || `${formData.name.toLowerCase().replace(/\s+/g, '-')}-cat-${Date.now()}`
-      };
+      // Ne pas inclure l'ID pour la création, le backend génère un UUID
+      const categoryData = { ...formData };
 
       if (editingCategory) {
+        // Mise à jour : on envoie les données sans l'ID (il est dans l'URL)
         await CategoryService.update(editingCategory.id, categoryData);
       } else {
+        // Création : le backend génère l'ID automatiquement
         await CategoryService.create(categoryData);
       }
 
@@ -113,7 +113,8 @@ export default function CategoriesManager({ onCategoryChange }: CategoriesManage
       onCategoryChange?.();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde de la catégorie');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde de la catégorie';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -123,6 +124,7 @@ export default function CategoriesManager({ onCategoryChange }: CategoriesManage
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
+      setTimeout(() => setDeleteConfirm(null), 5000); // Reset après 5s
       return;
     }
 
@@ -132,9 +134,12 @@ export default function CategoriesManager({ onCategoryChange }: CategoriesManage
       await loadCategories();
       setDeleteConfirm(null);
       onCategoryChange?.();
+      alert('✅ Catégorie supprimée avec succès');
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de la catégorie');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression de la catégorie';
+      alert(errorMessage);
+      setDeleteConfirm(null);
     } finally {
       setLoading(false);
     }

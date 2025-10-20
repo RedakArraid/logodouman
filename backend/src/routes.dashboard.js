@@ -229,7 +229,7 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
           include: { category: true }
         });
         return {
-          category: product.category.name,
+          category: product?.category?.name || 'Autre',
           quantity: item._sum.quantity
         };
       })
@@ -237,6 +237,7 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
 
     // Grouper par catégorie
     const topCategoriesGrouped = categoryAnalysis.reduce((acc, item) => {
+      if (!item.category) return acc;
       const existing = acc.find(cat => cat.category === item.category);
       if (existing) {
         existing.quantity += item.quantity;
@@ -246,6 +247,93 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
       return acc;
     }, []).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
 
+    // Calculer les revenues par catégorie et les pourcentages
+    const totalRevenueForCategories = currentRevenue || 1;
+    const categoriesWithRevenue = await Promise.all(
+      topCategoriesGrouped.map(async (cat) => {
+        // Calculer le revenu pour cette catégorie
+        const categoryProducts = await db.product.findMany({
+          where: {
+            category: {
+              name: cat.category
+            }
+          },
+          select: { id: true }
+        });
+        
+        const productIds = categoryProducts.map(p => p.id);
+        
+        const categoryRevenue = await db.orderItem.aggregate({
+          where: {
+            productId: { in: productIds },
+            order: {
+              createdAt: { gte: startDate },
+              status: { not: 'CANCELLED' }
+            }
+          },
+          _sum: { totalPrice: true }
+        });
+        
+        const revenue = categoryRevenue._sum.totalPrice || 0;
+        const percentage = Math.round((revenue / totalRevenueForCategories) * 100);
+        
+        return {
+          category: cat.category,
+          revenue,
+          percentage,
+          quantity: cat.quantity
+        };
+      })
+    );
+
+    // Calculer la valeur du stock
+    const stockValue = await db.product.aggregate({
+      _sum: {
+        stock: true
+      }
+    });
+    
+    const productsWithPrices = await db.product.findMany({
+      select: { stock: true, price: true }
+    });
+    
+    const totalStockValue = productsWithPrices.reduce((sum, p) => sum + (p.stock * p.price), 0);
+
+    // Formater les données journalières pour les graphiques
+    const dailyRevenueData = [];
+    const dailyOrdersData = [];
+    
+    // Créer un map pour regrouper par jour
+    const dayMap = new Map();
+    
+    revenueByDay.forEach(item => {
+      const day = new Date(item.createdAt).toISOString().split('T')[0];
+      const existing = dayMap.get(day) || { revenue: 0, orders: 0 };
+      existing.revenue += item._sum.totalAmount || 0;
+      dayMap.set(day, existing);
+    });
+    
+    ordersByDay.forEach(item => {
+      const day = new Date(item.createdAt).toISOString().split('T')[0];
+      const existing = dayMap.get(day) || { revenue: 0, orders: 0 };
+      existing.orders += item._count.id || 0;
+      dayMap.set(day, existing);
+    });
+    
+    // Convertir le map en array pour les graphiques
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayKey = date.toISOString().split('T')[0];
+      const data = dayMap.get(dayKey) || { revenue: 0, orders: 0 };
+      last7Days.push({
+        date: dayKey,
+        revenue: data.revenue,
+        orders: data.orders
+      });
+    }
+
     res.json({
       // Statistiques principales
       sales: {
@@ -253,7 +341,16 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
         totalOrders,
         averageOrderValue: averageOrderValue._avg.totalAmount || 0,
         revenueGrowth: revenueGrowthPercent,
-        period: `${period} jours`
+        period: `${period} jours`,
+        dailyRevenue: last7Days,
+        monthlyRevenue: last7Days, // Pour l'instant même data, à améliorer pour les mois
+        topProducts: topProductsWithDetails.map(p => ({
+          id: p.id,
+          name: p.name,
+          revenue: p.price * p.totalSold,
+          units: p.totalSold
+        })),
+        revenueByCategory: categoriesWithRevenue
       },
       
       // Inventaire
@@ -261,15 +358,18 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
         totalProducts,
         lowStockProducts,
         outOfStockProducts,
-        stockHealth: Math.round(((totalProducts - outOfStockProducts) / totalProducts) * 100)
+        stockHealth: totalProducts > 0 ? Math.round(((totalProducts - outOfStockProducts) / totalProducts) * 100) : 0,
+        stockValue: totalStockValue
       },
       
       // Clients
       customers: {
         total: totalCustomers,
         new: newCustomers,
+        newThisMonth: newCustomers,
         active: activeCustomers,
-        retentionRate: totalCustomers > 0 ? Math.round((activeCustomers / totalCustomers) * 100) : 0
+        retentionRate: totalCustomers > 0 ? Math.round((activeCustomers / totalCustomers) * 100) : 0,
+        customerGrowth: totalCustomers > 0 ? Math.round((newCustomers / totalCustomers) * 100) : 0
       },
       
       // Commandes
@@ -278,8 +378,13 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
         recent: recentOrders
       },
       
-      // Top produits
-      topProducts: topProductsWithDetails,
+      // Top produits (format compatible frontend)
+      topProducts: topProductsWithDetails.map(p => ({
+        id: p.id,
+        name: p.name,
+        revenue: p.price * p.totalSold,
+        units: p.totalSold
+      })),
       
       // Alertes
       alerts: {
@@ -287,17 +392,12 @@ router.get('/overview', requireAuth, requireRole(['admin', 'manager']), async (r
         count: stockAlerts.length
       },
       
-      // Graphiques
+      // Graphiques (format compatible frontend)
       charts: {
-        revenueByDay: revenueByDay.map(item => ({
-          date: item.createdAt,
-          revenue: item._sum.totalAmount
-        })),
-        ordersByDay: ordersByDay.map(item => ({
-          date: item.createdAt,
-          orders: item._count.id
-        })),
-        topCategories: topCategoriesGrouped
+        dailyRevenue: last7Days,
+        ordersByDay: last7Days,
+        topCategories: topCategoriesGrouped,
+        revenueByCategory: categoriesWithRevenue
       }
     });
   } catch (error) {

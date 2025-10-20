@@ -15,6 +15,8 @@ import {
 import AuthGuard from '../components/AuthGuard';
 import ProductsManager from '../components/ProductsManager';
 import CategoriesManager from '../components/CategoriesManager';
+import OrdersManager from '../components/OrdersManager';
+import CustomersManager from '../components/CustomersManager';
 import KPIGrid from '../components/KPIGrid';
 import SalesCharts from '../components/SalesCharts';
 import AlertsManager from '../components/AlertsManager';
@@ -98,61 +100,71 @@ export default function AdminDashboard() {
     if (user && token) {
       loadDashboardData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token]);
 
   const loadDashboardData = async () => {
     try {
       setRefreshing(true);
       
-      // Simuler des données analytics pour le moment
-      const mockStats = {
-        sales: {
-          totalRevenue: 128500,
-          totalOrders: 47,
-          averageOrderValue: 27340,
-          revenueGrowth: 12.5,
-          dailyRevenue: [
-            { date: '2024-01-01', revenue: 145000, orders: 12 },
-            { date: '2024-01-02', revenue: 167000, orders: 15 },
-            { date: '2024-01-03', revenue: 198000, orders: 18 },
-            { date: '2024-01-04', revenue: 156000, orders: 14 },
-            { date: '2024-01-05', revenue: 189000, orders: 17 },
-            { date: '2024-01-06', revenue: 234000, orders: 21 },
-            { date: '2024-01-07', revenue: 201000, orders: 19 },
-          ],
-          monthlyRevenue: [],
-          topProducts: [
-            { id: 1, name: 'Sac à main verni brillant', revenue: 180000, units: 12 },
-            { id: 2, name: 'Sac imprimé géométrique', revenue: 125000, units: 10 },
-            { id: 3, name: 'Sac à dos ordinateur', revenue: 270000, units: 15 },
-          ],
-          revenueByCategory: [
-            { category: 'Luxe', revenue: 450000, percentage: 35 },
-            { category: 'Business', revenue: 380000, percentage: 30 },
-            { category: 'Casual', revenue: 260000, percentage: 20 },
-            { category: 'Vintage', revenue: 190000, percentage: 15 },
-          ]
-        },
-        customers: {
-          total: 1247,
-          newThisMonth: 89,
-          customerGrowth: 8.3
-        },
-        inventory: {
-          totalProducts: 156,
-          stockValue: 89750,
-          lowStockProducts: 12,
-          stockHealth: 87
-        }
-      };
+      if (!token) return;
 
-      const [categoriesRes] = await Promise.allSettled([
-        CategoryService.getAll()
+      // Charger les vraies données depuis l'API
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002';
+      
+      const [dashboardRes, categoriesRes, alertsRes] = await Promise.allSettled([
+        fetch(`${API_URL}/api/dashboard/overview?period=30`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => res.json()),
+        CategoryService.getAll(),
+        fetch(`${API_URL}/api/dashboard/alerts`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => res.json())
       ]);
 
-      setStats(mockStats);
+      // Charger les données du dashboard
+      if (dashboardRes.status === 'fulfilled') {
+        const dashData = dashboardRes.value;
+        
+        // Formater les données pour correspondre à l'interface DashboardStats
+        const formattedStats: DashboardStats = {
+          sales: {
+            totalRevenue: dashData.sales?.totalRevenue || 0,
+            totalOrders: dashData.sales?.totalOrders || 0,
+            averageOrderValue: dashData.sales?.averageOrderValue || 0,
+            revenueGrowth: dashData.sales?.revenueGrowth || 0,
+            dailyRevenue: dashData.sales?.dailyRevenue || [],
+            monthlyRevenue: dashData.sales?.monthlyRevenue || [],
+            topProducts: dashData.sales?.topProducts || [],
+            revenueByCategory: dashData.sales?.revenueByCategory || []
+          },
+          customers: {
+            total: dashData.customers?.total || 0,
+            newThisMonth: dashData.customers?.newThisMonth || 0,
+            customerGrowth: dashData.customers?.customerGrowth || 0
+          },
+          inventory: {
+            totalProducts: dashData.inventory?.totalProducts || 0,
+            stockValue: dashData.inventory?.stockValue || 0,
+            lowStockProducts: dashData.inventory?.lowStockProducts || 0,
+            stockHealth: dashData.inventory?.stockHealth || 0
+          }
+        };
+        
+        setStats(formattedStats);
+        console.log('✅ Données du dashboard chargées depuis la BDD:', formattedStats);
+      } else {
+        console.error('Erreur chargement dashboard:', dashboardRes.reason);
+      }
+
+      // Charger les catégories
       if (categoriesRes.status === 'fulfilled') {
         setCategories(categoriesRes.value);
+      }
+      
+      // Charger les alertes
+      if (alertsRes.status === 'fulfilled') {
+        setAlerts(alertsRes.value);
       }
       
     } catch (error) {
@@ -306,12 +318,18 @@ export default function AdminDashboard() {
             />
           )}
           
-          {activeSection === 'orders' && (
-            <OrdersSection />
+          {activeSection === 'orders' && token && (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Commandes</h1>
+              <OrdersManager token={token} />
+            </div>
           )}
           
-          {activeSection === 'customers' && (
-            <CustomersSection />
+          {activeSection === 'customers' && token && (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Clients</h1>
+              <CustomersManager token={token} />
+            </div>
           )}
         </main>
       </div>
@@ -361,30 +379,4 @@ function DashboardAnalytics({
   );
 }
 
-// Composant Commandes (placeholder)
-function OrdersSection() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Commandes</h1>
-      <div className="bg-white p-8 rounded-lg shadow border text-center">
-        <CogIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Commandes</h3>
-        <p className="text-gray-600">Module de gestion des commandes en cours de développement.</p>
-      </div>
-    </div>
-  );
-}
-
-// Composant Clients (placeholder)
-function CustomersSection() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Clients</h1>
-      <div className="bg-white p-8 rounded-lg shadow border text-center">
-        <UsersIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Clients</h3>
-        <p className="text-gray-600">Module de gestion des clients en cours de développement.</p>
-      </div>
-    </div>
-  );
-}
+// Placeholders supprimés - Les vrais composants OrdersManager et CustomersManager sont maintenant utilisés

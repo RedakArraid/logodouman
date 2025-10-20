@@ -63,7 +63,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     id: "prod-001-luxury-leather",
     name: "Sac Cuir Luxe Premium",
     description: "Sac en cuir véritable de première qualité, finition impeccable",
-    price: 1500000, // 15,000.00€
+    price: 10000000, // 100,000 FCFA
     categoryId: "cat-001-luxury",
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop",
     stock: 5,
@@ -74,7 +74,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     id: "prod-002-vintage-retro",
     name: "Sac Vintage Authentique",
     description: "Sac vintage authentique des années 60, état excellent",
-    price: 1250000, // 12,500.00€
+    price: 8000000, // 80,000 FCFA
     categoryId: "cat-002-vintage",
     image: "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?w=400&h=300&fit=crop",
     stock: 3,
@@ -85,7 +85,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     id: "prod-003-business-elegant",
     name: "Sac Business Élégant",
     description: "Sac professionnel élégant, parfait pour le bureau",
-    price: 1800000, // 18,000.00€
+    price: 12000000, // 120,000 FCFA
     categoryId: "cat-003-business",
     image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop",
     stock: 8,
@@ -96,7 +96,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     id: "prod-004-casual-daily",
     name: "Sac Casual Quotidien",
     description: "Sac décontracté parfait pour la vie quotidienne",
-    price: 950000, // 9,500.00€
+    price: 6000000, // 60,000 FCFA
     categoryId: "cat-004-casual",
     image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
     stock: 12,
@@ -107,8 +107,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
 
 // Fonctions utilitaires pour le formatage des prix
 export const formatPrice = (priceInCents: number): string => {
-  const euros = priceInCents / 100;
-  return `${euros.toFixed(2)}€`;
+  const fcfa = priceInCents / 100;
+  return `${fcfa.toFixed(0)} FCFA`;
 };
 
 export const validatePrice = (price: number): boolean => {

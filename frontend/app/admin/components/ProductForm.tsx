@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ImageUpload from '../../components/ImageUpload';
+import CloudinaryImageUpload from '../../components/CloudinaryImageUpload';
 import { Product } from '../../../types/index';
 
 interface ProductFormProps {
@@ -91,7 +91,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prix (en €) *
+              Prix (en FCFA) *
             </label>
             <input
               type="number"
@@ -109,12 +109,11 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Image du produit
           </label>
-          <ImageUpload
+          <CloudinaryImageUpload
             currentImage={formData.image}
             onImageChange={handleImageChange}
-            type="product"
             placeholder="Choisir une image de produit"
-            maxSize={5}
+            maxSize={5 * 1024 * 1024}
           />
         </div>
 

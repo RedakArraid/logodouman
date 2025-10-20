@@ -5,7 +5,14 @@ const nextConfig = {
   
   // 🖼️ Configuration des images
   images: {
-    domains: ['images.unsplash.com', 'localhost', '127.0.0.1', 'apilogodouman.genea.space', 'logodouman-backend'],
+    domains: [
+      'images.unsplash.com', 
+      'localhost', 
+      '127.0.0.1', 
+      'apilogodouman.genea.space', 
+      'logodouman-backend',
+      'res.cloudinary.com' // Cloudinary CDN
+    ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -30,6 +37,12 @@ const nextConfig = {
         hostname: 'logodouman-backend',
         port: '4002',
         pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
       },
     ],
     unoptimized: false,

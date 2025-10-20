@@ -99,7 +99,51 @@ class ApiService {
   }
 
   async delete(endpoint: string, options?: RequestInit) {
-    return this.request(endpoint, { ...options, method: 'DELETE' });
+    const url = `${this.baseURL}${endpoint}`;
+    
+    const defaultOptions: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      ...options,
+      method: 'DELETE',
+    };
+
+    // Ajouter le token d'authentification si disponible
+    const token = this.getAuthToken();
+    if (token) {
+      defaultOptions.headers = {
+        ...defaultOptions.headers,
+        'Authorization': `Bearer ${token}`,
+      };
+    }
+
+    try {
+      console.log(`🔄 API Request: DELETE ${url}`);
+      
+      const response = await fetch(url, defaultOptions);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`❌ API Error ${response.status}:`, errorData);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      // Si status 204 (No Content), retourner null
+      if (response.status === 204) {
+        console.log(`✅ API Success: DELETE ${url} (No Content)`);
+        return null;
+      }
+      
+      // Sinon retourner les données JSON
+      const data = await response.json();
+      console.log(`✅ API Success: DELETE ${url}`, data);
+      return data;
+    } catch (error) {
+      console.error('🚨 API Network Error:', error);
+      throw error;
+    }
   }
 
   // Gestion du token d'authentification
@@ -212,6 +256,42 @@ export class ProductService {
       return await apiService.delete(`/api/products/${id}`);
     } catch (error) {
       console.error('Erreur lors de la suppression du produit:', error);
+      throw error;
+    }
+  }
+
+  static async uploadImage(file: File): Promise<{ url: string; publicId: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const token = apiService.getAuthToken();
+      const url = `${apiService['baseURL']}/api/products/upload`;
+
+      console.log('📤 Uploading image to Cloudinary...');
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur lors de l\'upload de l\'image');
+      }
+
+      const data = await response.json();
+      console.log('✅ Image uploaded to Cloudinary:', data.url);
+
+      return {
+        url: data.url,
+        publicId: data.publicId
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload de l\'image:', error);
       throw error;
     }
   }

@@ -64,7 +64,7 @@ export default function BoutiquePage() {
   // États des filtres - tous déclarés en premier
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxPrice, setMaxPrice] = useState(15000000); // 150,000 FCFA en centimes
   const [sortBy, setSortBy] = useState('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -75,7 +75,7 @@ export default function BoutiquePage() {
 
   // Calculer les prix min/max des produits
   const priceStats = useMemo(() => {
-    if (!isHydrated || products.length === 0) return { min: 0, max: 50000 };
+    if (!isHydrated || products.length === 0) return { min: 0, max: 15000000 }; // 150,000 FCFA en centimes
     
     const prices = products.map(p => p.price);
     return {
@@ -86,7 +86,7 @@ export default function BoutiquePage() {
 
   // Initialiser les prix quand les produits sont chargés
   useEffect(() => {
-    if (isHydrated && products.length > 0 && minPrice === 0 && maxPrice === 50000) {
+    if (isHydrated && products.length > 0 && minPrice === 0 && maxPrice === 15000000) {
       setMinPrice(priceStats.min);
       setMaxPrice(priceStats.max);
     }
@@ -292,7 +292,7 @@ export default function BoutiquePage() {
                       />
                     </div>
                     <div className="text-xs text-gray-500">
-                      Disponible: {priceStats.min.toLocaleString()} - {priceStats.max.toLocaleString()} FCFA
+                      Disponible: {(priceStats.min / 100).toLocaleString('fr-FR', {maximumFractionDigits: 0})} - {(priceStats.max / 100).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA
                     </div>
                   </div>
                 </div>
@@ -373,7 +373,7 @@ export default function BoutiquePage() {
                       {/* Prix et badge stock */}
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-xl font-bold text-gray-900">
-                          {product.price.toLocaleString()} FCFA
+                          {(product.price / 100).toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA
                         </span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           (product.stock || 0) > 10 ? 'bg-green-100 text-green-800' :

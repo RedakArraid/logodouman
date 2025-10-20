@@ -41,37 +41,28 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data, loading = false }) => {
   const [activeChart, setActiveChart] = useState<'daily' | 'monthly'>('daily');
   const [viewMode, setViewMode] = useState<'revenue' | 'orders'>('revenue');
 
-  // Données par défaut pour les tests
-  const mockDailyData = [
-    { date: '2024-01-01', revenue: 145000, orders: 12 },
-    { date: '2024-01-02', revenue: 167000, orders: 15 },
-    { date: '2024-01-03', revenue: 198000, orders: 18 },
-    { date: '2024-01-04', revenue: 156000, orders: 14 },
-    { date: '2024-01-05', revenue: 189000, orders: 17 },
-    { date: '2024-01-06', revenue: 234000, orders: 21 },
-    { date: '2024-01-07', revenue: 201000, orders: 19 },
-  ];
-
-  const mockTopProducts = [
-    { id: 1, name: 'Sac à main verni brillant', revenue: 180000, units: 12 },
-    { id: 2, name: 'Sac imprimé géométrique', revenue: 125000, units: 10 },
-    { id: 3, name: 'Sac à dos ordinateur', revenue: 270000, units: 15 },
-    { id: 4, name: 'Sac bandoulière compact', revenue: 95000, units: 10 },
-  ];
-
-  const mockCategoryData = [
-    { category: 'Luxe', revenue: 450000, percentage: 35 },
-    { category: 'Business', revenue: 380000, percentage: 30 },
-    { category: 'Casual', revenue: 260000, percentage: 20 },
-    { category: 'Vintage', revenue: 190000, percentage: 15 },
-  ];
-
-  const chartData = data || {
-    dailyRevenue: mockDailyData,
-    monthlyRevenue: mockDailyData.map(d => ({ ...d, month: d.date })),
-    topProducts: mockTopProducts,
-    revenueByCategory: mockCategoryData
+  // Données par défaut vides si pas de data
+  const defaultData = {
+    dailyRevenue: [],
+    monthlyRevenue: [],
+    topProducts: [],
+    revenueByCategory: []
   };
+
+  const chartData = data || defaultData;
+  
+  // Si pas de données, afficher un message
+  if (!data || (chartData.dailyRevenue.length === 0 && chartData.topProducts.length === 0)) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <ChartBarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune donnée de vente</h3>
+        <p className="text-gray-500">
+          Les graphiques s'afficheront dès que vous aurez des commandes dans votre système.
+        </p>
+      </div>
+    );
+  }
 
   const formatTooltipValue = (value: number, name: string) => {
     if (name === 'revenue') return formatCurrency(value);

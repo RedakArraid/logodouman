@@ -126,7 +126,7 @@ const KPIGrid: React.FC<KPIGridProps> = ({ data, loading = false }) => {
   const kpis = [
     {
       title: 'Chiffre d\'Affaires',
-      value: data ? formatCurrency(data.sales.totalRevenue) : '0 €',
+      value: data ? formatCurrency(data.sales.totalRevenue) : '0 FCFA',
       growth: data?.sales.revenueGrowth,
       icon: CurrencyEuroIcon,
       color: 'green' as const,
@@ -138,7 +138,7 @@ const KPIGrid: React.FC<KPIGridProps> = ({ data, loading = false }) => {
       growth: data ? ((data.sales.totalOrders - 50) / 50) * 100 : 0, // Mock growth
       icon: ShoppingBagIcon,
       color: 'blue' as const,
-      subtitle: `${data ? formatCurrency(data.sales.averageOrderValue) : '0 €'} moy.`
+      subtitle: `${data ? formatCurrency(data.sales.averageOrderValue) : '0 FCFA'} moy.`
     },
     {
       title: 'Clients',
@@ -154,7 +154,7 @@ const KPIGrid: React.FC<KPIGridProps> = ({ data, loading = false }) => {
       growth: data ? data.inventory.stockHealth - 80 : 0, // Mock health vs target
       icon: CubeIcon,
       color: data && data.inventory.lowStockProducts > 5 ? 'red' as const : 'orange' as const,
-      subtitle: data ? `${formatCurrency(data.inventory.stockValue)} valeur` : '0 € valeur'
+      subtitle: data ? `${formatCurrency(data.inventory.stockValue)} valeur` : '0 FCFA valeur'
     }
   ];
 

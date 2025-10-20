@@ -11,6 +11,7 @@ import {
   PhotoIcon
 } from '@heroicons/react/24/outline';
 import { ProductService } from '../../config/api';
+import CloudinaryImageUpload from '../../components/CloudinaryImageUpload';
 
 // Interfaces définies localement
 interface Product {
@@ -117,7 +118,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price / 100, // Convertir centimes en euros
+      price: product.price / 100, // Convertir centimes en FCFA
       categoryId: product.categoryId,
       description: product.description,
       stock: product.stock,
@@ -166,18 +167,28 @@ export default function ProductsManager({ categories, onProductChange }: Product
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
+      setTimeout(() => setDeleteConfirm(null), 5000); // Reset après 5s
       return;
     }
 
     try {
       setLoading(true);
-      await ProductService.delete(id);
+      const response = await ProductService.delete(id);
       await loadProducts();
       setDeleteConfirm(null);
       onProductChange?.();
+      
+      // Gérer le cas où le produit a été désactivé au lieu d'être supprimé
+      if (response && response.action === 'deactivated') {
+        alert('⚠️ ' + response.message);
+      } else {
+        alert('✅ Produit supprimé avec succès');
+      }
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression du produit');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression du produit';
+      alert(errorMessage);
+      setDeleteConfirm(null);
     } finally {
       setLoading(false);
     }
@@ -238,7 +249,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
         <div className="bg-white p-4 rounded-lg shadow border">
           <h3 className="text-sm text-gray-500">Valeur Stock</h3>
           <p className="text-2xl font-bold text-blue-600">
-            {(products.reduce((sum, p) => sum + (p.price * p.stock), 0) / 100).toFixed(0)}€
+            {(products.reduce((sum, p) => sum + (p.price * p.stock), 0) / 100).toFixed(0)} FCFA
           </p>
         </div>
       </div>
@@ -296,7 +307,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {(product.price / 100).toFixed(2)}€
+                    {(product.price / 100).toFixed(0)} FCFA
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`text-sm font-medium ${product.stock <= 10 ? 'text-red-600' : 'text-gray-900'}`}>
@@ -397,7 +408,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
 
                   {/* Prix */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Prix (€)</label>
+                    <label className="block text-sm font-medium text-gray-700">Prix (FCFA)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -474,15 +485,14 @@ export default function ProductsManager({ categories, onProductChange }: Product
                   />
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload avec Cloudinary */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">URL de l'image</label>
-                  <input
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) => setFormData({...formData, image: e.target.value})}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
-                    placeholder="https://example.com/image.jpg"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
+                  <CloudinaryImageUpload
+                    currentImage={formData.image}
+                    onImageChange={(imageUrl) => setFormData({...formData, image: imageUrl})}
+                    placeholder="Choisir une image pour ce produit"
+                    maxSize={5 * 1024 * 1024}
                   />
                 </div>
 

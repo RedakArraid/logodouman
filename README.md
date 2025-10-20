@@ -140,6 +140,19 @@ orange: {
 }
 ```
 
+### 📸 Gestion des images avec Cloudinary
+
+**LogoDouman utilise Cloudinary** pour le stockage et l'optimisation des images :
+
+- ✅ **Stockage cloud** sécurisé (25 GB gratuit)
+- ✅ **CDN mondial** pour performances maximales
+- ✅ **Optimisation automatique** (WebP, compression)
+- ✅ **Transformations** à la volée (resize, crop, etc.)
+
+**Configuration :** Les credentials Cloudinary sont déjà configurés dans `docker-compose.yml`
+
+📚 **Guide complet :** [CLOUDINARY_GUIDE.md](./CLOUDINARY_GUIDE.md)
+
 ### 📱 Responsive Design
 
 - **Mobile** : Interface adaptée, navigation simplifiée

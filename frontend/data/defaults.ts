@@ -47,7 +47,7 @@ interface Category {
 
 // Fonctions utilitaires pour les prix
 const validatePrice = (price: number): boolean => price > 0;
-const formatPrice = (price: number): string => `${(price / 100).toFixed(2)} €`;
+const formatPrice = (price: number): string => `${(price / 100).toFixed(0)} FCFA`;
 
 // IDs cohérents avec séquence logique
 export const CATEGORY_IDS = {
@@ -126,7 +126,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "1", // ✅ CORRECT : string
     name: "Sac à main verni brillant avec anneau de levage",
-    price: 1500000, // ✅ CORRECT : 150.00€ en centimes
+    price: 10000000, // ✅ CORRECT : 100,000 FCFA en centimes
     categoryId: CATEGORY_IDS.LUXURY,
     image: PRODUCT_IMAGES[1],
     description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
@@ -156,7 +156,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "2", // ✅ CORRECT : string
     name: "Sac imprimé géométrique vintage léger tendance",
-    price: 1250000, // ✅ CORRECT : 125.00€ en centimes
+    price: 8000000, // ✅ CORRECT : 80,000 FCFA en centimes
     categoryId: CATEGORY_IDS.VINTAGE,
     image: PRODUCT_IMAGES[2],
     description: "Sac tendance avec motifs géométriques vintage, léger et pratique pour un look moderne",
@@ -186,7 +186,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "3", // ✅ CORRECT : string
     name: "Sac à dos d'ordinateur résistant à l'eau antivol",
-    price: 1800000, // ✅ CORRECT : 180.00€ en centimes
+    price: 12000000, // ✅ CORRECT : 120,000 FCFA en centimes
     categoryId: CATEGORY_IDS.BUSINESS,
     image: PRODUCT_IMAGES[3],
     description: "Sac à dos professionnel antivol avec protection contre l'eau pour ordinateur portable",
@@ -216,7 +216,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: "4", // ✅ CORRECT : string
     name: "Sac bandoulière compact quotidien",
-    price: 950000, // ✅ CORRECT : 95.00€ en centimes
+    price: 6000000, // ✅ CORRECT : 60,000 FCFA en centimes
     categoryId: CATEGORY_IDS.CASUAL,
     image: PRODUCT_IMAGES[4],
     description: "Sac bandoulière compact et pratique pour le quotidien, design moderne et fonctionnel",

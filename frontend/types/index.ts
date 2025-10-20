@@ -302,7 +302,7 @@ export interface AuthResponse {
 
 // Utilitaires de formatage
 export const formatPrice = (priceInCents: number): string => {
-  return `${(priceInCents / 100).toFixed(2)} €`;
+  return `${(priceInCents / 100).toFixed(0)} FCFA`;
 };
 
 export const formatPriceForInput = (priceInCents: number): number => {

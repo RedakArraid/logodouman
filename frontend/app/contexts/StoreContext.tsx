@@ -38,7 +38,7 @@ const defaultProducts: Product[] = [
   {
     id: 1,
     name: "Sac à main verni brillant avec anneau de levage",
-    price: 1500000, // Prix en centimes (150.00 €)
+    price: 10000000, // Prix en centimes (100,000 FCFA)
     categoryId: "luxury-cat-001",
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
     description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",

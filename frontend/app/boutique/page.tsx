@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useStore } from '../contexts/StoreContext';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
-import ProductFilters from '../components/ProductFilters';
+import ProductFiltersAmazon from '../components/ProductFiltersAmazon';
 import { 
   MagnifyingGlassIcon,
   XMarkIcon,
@@ -15,6 +15,7 @@ import {
   SparklesIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 // 🔧 FIX: Utilitaire pour normaliser les chaînes (accents, casse)
 const normalizeString = (str: string): string => {
@@ -214,7 +215,7 @@ export default function BoutiquePage() {
                   onClick={() => setSelectedCategory(category.id)}
                   className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-all border border-white/20 font-semibold hover:scale-105"
                 >
-                  {category.icon} {category.name}
+                  {category.name}
                 </button>
               ))}
             </div>
@@ -356,7 +357,7 @@ export default function BoutiquePage() {
           {/* Sidebar Filtres Desktop */}
           <aside className="hidden lg:block lg:w-80">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-gray-100">
-              <ProductFilters
+              <ProductFiltersAmazon
                 categories={categories}
                 availableColors={availableColors}
                 availableMaterials={availableMaterials}
@@ -409,6 +410,11 @@ export default function BoutiquePage() {
                     // Vue liste
                     return (
                       <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all border border-gray-100 group">
+                        <Link
+                          href={`/boutique/${product.id}`}
+                          className="absolute inset-0 z-0"
+                          aria-label={`Voir les détails de ${product.name}`}
+                        />
                         <div className="flex flex-col md:flex-row">
                           <div className="md:w-64 h-64 overflow-hidden relative">
                             {isNew && (
@@ -431,7 +437,6 @@ export default function BoutiquePage() {
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xl">{category?.icon}</span>
                                   <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                                     {category?.name}
                                   </span>
@@ -471,8 +476,13 @@ export default function BoutiquePage() {
                               ))}
                             </div>
 
-                            <div className="flex gap-3 mt-auto">
+                            <div className="flex gap-3 mt-auto relative z-10">
                               <button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  // TODO: Ajouter au panier
+                                }}
                                 className={`flex-1 py-3 px-6 rounded-xl transition-all font-bold ${
                                   (product.stock || 0) === 0 
                                     ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
@@ -482,9 +492,13 @@ export default function BoutiquePage() {
                               >
                                 🛒 Ajouter au panier
                               </button>
-                              <button className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-orange-500 hover:text-orange-600 transition-all font-bold">
+                              <Link
+                                href={`/boutique/${product.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-orange-500 hover:text-orange-600 transition-all font-bold inline-block text-center relative z-10"
+                              >
                                 Détails
-                              </button>
+                              </Link>
                             </div>
                           </div>
                         </div>
@@ -494,7 +508,11 @@ export default function BoutiquePage() {
 
                   // Vue grille
                   return (
-                    <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-100 relative">
+                    <Link
+                      key={product.id}
+                      href={`/boutique/${product.id}`}
+                      className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-100 relative block"
+                    >
                       
                       {/* Badge "Nouveau" */}
                       {isNew && (
@@ -518,9 +536,12 @@ export default function BoutiquePage() {
                         {/* Overlay hover */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <div className="absolute bottom-4 left-4 right-4">
-                            <button className="w-full bg-white text-gray-900 py-2.5 px-4 rounded-lg font-bold hover:bg-orange-500 hover:text-white transition-all shadow-xl">
+                            <Link
+                              href={`/boutique/${product.id}`}
+                              className="block w-full bg-white text-gray-900 py-2.5 px-4 rounded-lg font-bold hover:bg-orange-500 hover:text-white transition-all shadow-xl text-center"
+                            >
                               Voir les détails
-                            </button>
+                            </Link>
                           </div>
                         </div>
 
@@ -540,13 +561,12 @@ export default function BoutiquePage() {
                       {/* Contenu */}
                       <div className="p-5">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{category?.icon}</span>
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                             {category?.name}
                           </span>
                         </div>
 
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2 cursor-pointer">
                           {product.name}
                         </h3>
 
@@ -581,7 +601,12 @@ export default function BoutiquePage() {
                             </div>
                           </div>
                           <button 
-                            className={`p-3 rounded-xl transition-all ${
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: Ajouter au panier
+                            }}
+                            className={`p-3 rounded-xl transition-all relative z-10 ${
                               (product.stock || 0) === 0 
                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl hover:scale-110'
@@ -593,7 +618,7 @@ export default function BoutiquePage() {
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -637,7 +662,7 @@ export default function BoutiquePage() {
                 </button>
               </div>
 
-              <ProductFilters
+              <ProductFiltersAmazon
                 categories={categories}
                 availableColors={availableColors}
                 availableMaterials={availableMaterials}

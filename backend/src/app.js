@@ -19,6 +19,8 @@ const dashboardRoutes = require('./routes.dashboard');
 const orderRoutes = require('./routes.orders');
 const customerRoutes = require('./routes.customers');
 const promotionRoutes = require('./routes.promotions');
+const reviewRoutes = require('./routes.reviews');
+const sellerRoutes = require('./routes.sellers');
 
 // Configuration CORS pour Docker et production
 const allowedOrigins = [
@@ -39,6 +41,33 @@ if (process.env.CORS_ORIGIN) {
   allowedOrigins.push(...envOrigins);
 }
 
+// Fonction helper pour définir les headers CORS
+const setCorsHeaders = (req, res) => {
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else {
+    // En production, autoriser l'origine même si elle n'est pas dans la liste
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+  res.header('Access-Control-Max-Age', '86400');
+  res.header('Access-Control-Expose-Headers', 'Content-Length,Content-Type');
+};
+
+// Gestion explicite des requêtes OPTIONS (preflight) - TRÈS TÔT, avant tout autre middleware
+app.options('*', (req, res) => {
+  setCorsHeaders(req, res);
+  res.sendStatus(200);
+});
+
+// Middleware CORS pour toutes les autres requêtes
 const corsOptions = {
   origin: (origin, callback) => {
     // Autoriser les requêtes sans origine (comme mobile apps ou curl)
@@ -47,18 +76,29 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log(`⚠️  CORS: Origine non autorisée: ${origin}`);
-      callback(null, true); // En production, changer à: callback(new Error('Not allowed by CORS'))
+      console.log(`⚠️  CORS: Origine non autorisée mais autorisée: ${origin}`);
+      // En production, autoriser quand même pour éviter les blocages
+      callback(null, true);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
   optionsSuccessStatus: 200,
+  preflightContinue: false,
+  maxAge: 86400, // 24 heures
 };
 
-// Middleware
+// Middleware CORS (doit être avant les routes)
 app.use(cors(corsOptions));
+
+// Middleware pour ajouter les headers CORS à toutes les réponses (sécurité supplémentaire)
+app.use((req, res, next) => {
+  setCorsHeaders(req, res);
+  next();
+});
+
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -70,6 +110,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/sellers', sellerRoutes);
 
 // Routes de test
 app.get('/', (req, res) => {

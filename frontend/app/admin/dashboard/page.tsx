@@ -10,7 +10,8 @@ import {
   CogIcon,
   BellIcon,
   ArrowPathIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  StorefrontIcon
 } from '@heroicons/react/24/outline';
 import AuthGuard from '../components/AuthGuard';
 import ProductsManager from '../components/ProductsManager';
@@ -20,6 +21,7 @@ import CustomersManager from '../components/CustomersManager';
 import KPIGrid from '../components/KPIGrid';
 import SalesCharts from '../components/SalesCharts';
 import AlertsManager from '../components/AlertsManager';
+import SellersManager from '../components/SellersManager';
 import { apiService, CategoryService } from '../../config/api';
 
 // Interface Category définie localement
@@ -78,7 +80,7 @@ export default function AdminDashboard() {
   const [alerts, setAlerts] = useState([]);
 
   // États pour la navigation
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'vendeurs'>('dashboard');
 
   // Vérifier l'authentification au chargement
   useEffect(() => {
@@ -281,6 +283,20 @@ export default function AdminDashboard() {
                 <UsersIcon className="w-5 h-5" />
                 Clients
               </button>
+              
+              {(user?.role === 'admin' || user?.role === 'manager') && (
+                <button
+                  onClick={() => setActiveSection('vendeurs')}
+                  className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                    activeSection === 'vendeurs' 
+                      ? 'bg-orange-600 text-white' 
+                      : 'text-gray-700 hover:bg-orange-50'
+                  }`}
+                >
+                  <StorefrontIcon className="w-5 h-5" />
+                  Vendeurs
+                </button>
+              )}
             </nav>
           </div>
           
@@ -329,6 +345,13 @@ export default function AdminDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Clients</h1>
               <CustomersManager token={token} />
+            </div>
+          )}
+          
+          {activeSection === 'vendeurs' && (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Vendeurs (Marketplace)</h1>
+              <SellersManager />
             </div>
           )}
         </main>

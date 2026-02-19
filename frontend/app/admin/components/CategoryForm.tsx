@@ -1,48 +1,54 @@
 'use client';
 
-import { useState } from 'react';
-import ImageUpload from '../../components/ImageUpload';
+import { useState, useEffect } from 'react';
 import { Category } from '../../../types/index';
 
 interface CategoryFormProps {
   category?: Category;
+  categories: Category[]; // Pour le select de catégorie parente
   onSubmit: (data: any) => void;
   onCancel: () => void;
 }
 
-export default function CategoryForm({ category, onSubmit, onCancel }: CategoryFormProps) {
+export default function CategoryForm({ category, categories, onSubmit, onCancel }: CategoryFormProps) {
   const [formData, setFormData] = useState({
     name: category?.name || '',
-    icon: category?.icon || '',
-    image: category?.image || '',
+    slug: category?.slug || '',
     description: category?.description || '',
-    status: category?.status || 'active'
+    status: category?.status || 'active',
+    parentId: category?.parentId || null,
+    displayOrder: category?.displayOrder || 0
   });
 
-  const handleImageChange = (imageUrl: string) => {
-    setFormData(prev => ({
-      ...prev,
-      image: imageUrl
-    }));
-  };
+  // Auto-générer le slug à partir du nom
+  useEffect(() => {
+    if (!category && formData.name) {
+      const slug = formData.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      setFormData(prev => ({ ...prev, slug }));
+    }
+  }, [formData.name, category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Nettoyer les données avant envoi
+    const cleanData = {
+      name: formData.name,
+      slug: formData.slug,
+      description: formData.description,
+      status: formData.status,
+      parentId: formData.parentId && formData.parentId !== '' ? formData.parentId : null,
+      displayOrder: formData.displayOrder
+    };
+    onSubmit(cleanData);
   };
 
-  const iconOptions = [
-    { value: '💎', label: '💎 Diamant (Luxe)' },
-    { value: '🕰️', label: '🕰️ Horloge (Vintage)' },
-    { value: '💼', label: '💼 Mallette (Business)' },
-    { value: '👜', label: '👜 Sac (Casual)' },
-    { value: '✨', label: '✨ Étoiles (Premium)' },
-    { value: '🌟', label: '🌟 Étoile (Tendance)' },
-    { value: '💫', label: '💫 Étincelle (Mode)' },
-    { value: '🎨', label: '🎨 Palette (Créatif)' },
-    { value: '🏆', label: '🏆 Trophée (Élite)' },
-    { value: '💝', label: '💝 Cadeau (Spécial)' }
-  ];
+  // Catégories principales (sans parent) pour le select
+  const mainCategories = categories.filter(c => !c.parentId && c.id !== category?.id);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -51,7 +57,7 @@ export default function CategoryForm({ category, onSubmit, onCancel }: CategoryF
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Informations de base */}
+        {/* Nom et Slug */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -62,43 +68,27 @@ export default function CategoryForm({ category, onSubmit, onCancel }: CategoryF
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Nom de la catégorie"
+              placeholder="Ex: Sacs à main"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Icône *
+              Slug (URL) *
             </label>
-            <select
-              value={formData.icon}
-              onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            <input
+              type="text"
+              value={formData.slug}
+              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50"
+              placeholder="Ex: sacs-a-main"
               required
-            >
-              <option value="">Sélectionner une icône...</option>
-              {iconOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Généré automatiquement depuis le nom
+            </p>
           </div>
-        </div>
-
-        {/* Image de la catégorie */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Image de la catégorie
-          </label>
-          <ImageUpload
-            currentImage={formData.image}
-            onImageChange={handleImageChange}
-            type="category"
-            placeholder="Choisir une image de catégorie"
-            maxSize={3}
-          />
         </div>
 
         {/* Description */}
@@ -114,6 +104,46 @@ export default function CategoryForm({ category, onSubmit, onCancel }: CategoryF
             placeholder="Description de la catégorie..."
             required
           />
+        </div>
+
+        {/* Catégorie parente et Ordre */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Catégorie parente
+            </label>
+            <select
+              value={formData.parentId || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value || null }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              <option value="">Aucune (catégorie principale)</option>
+              {mainCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Laissez vide pour une catégorie principale
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ordre d'affichage
+            </label>
+            <input
+              type="number"
+              value={formData.displayOrder}
+              onChange={(e) => setFormData(prev => ({ ...prev, displayOrder: Number(e.target.value) }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              min="0"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Plus petit = affiché en premier
+            </p>
+          </div>
         </div>
 
         {/* Statut */}
@@ -134,23 +164,37 @@ export default function CategoryForm({ category, onSubmit, onCancel }: CategoryF
         {/* Aperçu de la catégorie */}
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Aperçu</h3>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">{formData.icon || '📦'}</div>
-              <div>
-                <h4 className="font-semibold text-gray-900">
-                  {formData.name || 'Nom de la catégorie'}
-                </h4>
-                <p className="text-sm text-gray-600">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-bold text-gray-900 text-lg">
+                    {formData.name || 'Nom de la catégorie'}
+                  </h4>
+                  <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                    formData.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {formData.status === 'active' ? 'Actif' : 'Inactif'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">
                   {formData.description || 'Description de la catégorie'}
                 </p>
-                <span className={`inline-block px-2 py-1 text-xs rounded-full mt-2 ${
-                  formData.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {formData.status === 'active' ? 'Actif' : 'Inactif'}
-                </span>
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                    /{formData.slug || 'slug'}
+                  </span>
+                  {formData.parentId && (
+                    <span className="text-orange-600 font-semibold">
+                      Sous-catégorie de: {categories.find(c => c.id === formData.parentId)?.name}
+                    </span>
+                  )}
+                  <span>
+                    Ordre: {formData.displayOrder}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

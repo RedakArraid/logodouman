@@ -3,7 +3,7 @@ const { z } = require('zod');
 const prisma = require('@prisma/client').PrismaClient;
 const router = express.Router();
 const db = new prisma();
-const { requireAuth, requireAdmin, requireRole } = require('./middleware.auth');
+const { requireAuth, requireAdmin, requireRole, requireSeller } = require('./middleware.auth');
 const { uploadSingle, deleteImage, extractPublicId, getResponsiveUrls } = require('./services/cloudinary.service');
 
 // Zod schema for product validation
@@ -74,13 +74,27 @@ router.post('/upload', (req, res) => {
 // GET all products
 router.get('/', async (req, res) => {
   try {
+    const { sellerId } = req.query;
+    const where = {};
+    if (sellerId) where.sellerId = sellerId;
+
     const products = await db.product.findMany({
+      where,
       include: {
         category: {
           select: {
             id: true,
             name: true,
-            icon: true
+            slug: true,
+            description: true
+          }
+        },
+        seller: {
+          select: {
+            id: true,
+            storeName: true,
+            slug: true,
+            rating: true
           }
         }
       },
@@ -111,7 +125,16 @@ router.get('/:id', async (req, res) => {
           select: {
             id: true,
             name: true,
-            icon: true
+            slug: true,
+            description: true
+          }
+        },
+        seller: {
+          select: {
+            id: true,
+            storeName: true,
+            slug: true,
+            rating: true
           }
         }
       }
@@ -128,8 +151,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST create product
-router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res) => {
+// Middleware: admin/manager OU vendeur approuvé
+async function requireProductWrite(req, res, next) {
+  if (['admin', 'manager'].includes(req.user.role)) return next();
+  if (req.user.role === 'seller') {
+    return requireSeller(req, res, next);
+  }
+  return res.status(403).json({ error: 'Droits insuffisants pour gérer les produits.' });
+}
+
+// POST create product (admin ou vendeur)
+router.post('/', requireAuth, requireProductWrite, async (req, res) => {
   try {
     const data = productSchema.parse(req.body);
     
@@ -138,15 +170,19 @@ router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res
     if (!category) {
       return res.status(400).json({ error: 'Catégorie non trouvée. Veuillez sélectionner une catégorie valide.' });
     }
+
+    // Admin: sellerId null. Vendeur: sellerId de req.seller
+    const sellerId = req.seller ? req.seller.id : null;
     
     const product = await db.product.create({ 
-      data,
+      data: { ...data, sellerId },
       include: {
         category: {
           select: {
             id: true,
             name: true,
-            icon: true
+            slug: true,
+            description: true
           }
         }
       }
@@ -164,8 +200,8 @@ router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res
   }
 });
 
-// PUT update product
-router.put('/:id', requireAuth, requireRole(['admin', 'manager']), async (req, res) => {
+// PUT update product (admin ou propriétaire vendeur)
+router.put('/:id', requireAuth, requireProductWrite, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   
   if (isNaN(id)) {
@@ -179,6 +215,11 @@ router.put('/:id', requireAuth, requireRole(['admin', 'manager']), async (req, r
     const existingProduct = await db.product.findUnique({ where: { id } });
     if (!existingProduct) {
       return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+
+    // Vendeur: ne peut modifier que ses propres produits
+    if (req.seller && existingProduct.sellerId !== req.seller.id) {
+      return res.status(403).json({ error: 'Vous ne pouvez modifier que vos propres produits.' });
     }
     
     // Si on change la catégorie, vérifier qu'elle existe
@@ -213,7 +254,8 @@ router.put('/:id', requireAuth, requireRole(['admin', 'manager']), async (req, r
           select: {
             id: true,
             name: true,
-            icon: true
+            slug: true,
+            description: true
           }
         }
       }
@@ -230,8 +272,8 @@ router.put('/:id', requireAuth, requireRole(['admin', 'manager']), async (req, r
   }
 });
 
-// DELETE product
-router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
+// DELETE product (admin ou propriétaire vendeur)
+router.delete('/:id', requireAuth, requireProductWrite, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   
   if (isNaN(id)) {
@@ -244,6 +286,11 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
     
     if (!product) {
       return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+
+    // Vendeur: ne peut supprimer que ses propres produits
+    if (req.seller && product.sellerId !== req.seller.id) {
+      return res.status(403).json({ error: 'Vous ne pouvez supprimer que vos propres produits.' });
     }
     
     // Vérifier si le produit est dans des commandes en cours

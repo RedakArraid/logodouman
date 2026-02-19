@@ -41,40 +41,40 @@ async function main() {
         data: {
           id: 'luxury-cat-001',
           name: 'Luxe',
-          icon: '💎',
-          image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center',
+          slug: 'luxe',
           description: 'Sacs haut de gamme en cuir premium et finitions dorées',
-          status: 'active'
+          status: 'active',
+          displayOrder: 0
         }
       }),
       db.category.create({
         data: {
           id: 'vintage-cat-002',
           name: 'Vintage',
-          icon: '🕰️',
-          image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center',
+          slug: 'vintage',
           description: 'Designs rétro et motifs géométriques tendance',
-          status: 'active'
+          status: 'active',
+          displayOrder: 1
         }
       }),
       db.category.create({
         data: {
           id: 'business-cat-003',
           name: 'Business',
-          icon: '💼',
-          image: 'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=400&h=400&fit=crop&crop=center',
+          slug: 'business',
           description: 'Sacs professionnels et fonctionnels pour le travail',
-          status: 'active'
+          status: 'active',
+          displayOrder: 2
         }
       }),
       db.category.create({
         data: {
           id: 'casual-cat-005',
           name: 'Casual',
-          icon: '👜',
-          image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center',
+          slug: 'casual',
           description: 'Sacs pratiques et confortables pour tous les jours',
-          status: 'active'
+          status: 'active',
+          displayOrder: 3
         }
       })
     ]);

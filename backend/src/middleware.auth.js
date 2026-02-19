@@ -32,4 +32,21 @@ function requireRole(role) {
   };
 }
 
-module.exports = { requireAuth, requireAdmin, requireRole }; 
+async function requireSeller(req, res, next) {
+  const { PrismaClient } = require('@prisma/client');
+  const db = new PrismaClient();
+  try {
+    const seller = await db.seller.findUnique({
+      where: { userId: req.user.userId }
+    });
+    if (!seller || seller.status !== 'approved') {
+      return res.status(403).json({ error: 'Espace vendeur non accessible. Compte vendeur requis ou en attente d\'approbation.' });
+    }
+    req.seller = seller;
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+}
+
+module.exports = { requireAuth, requireAdmin, requireRole, requireSeller }; 

@@ -10,17 +10,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===== CATÉGORIES =====
+// ===== CATÉGORIES (avec sous-catégories) =====
 model Category {
   id          String   @id @default(uuid())
   name        String
-  icon        String
-  image       String?
+  slug        String   @unique
   description String
   status      String   @default("active")
+  
+  // Hiérarchie : catégorie parente et sous-catégories
+  parentId    String?
+  parent      Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  subcategories Category[] @relation("CategoryToSubcategory")
+  
+  // Ordre d'affichage
+  displayOrder Int      @default(0)
+  
+  // Relations
   products    Product[]
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  @@index([parentId])
+  @@index([status])
+}
+
+// ===== VENDEURS (Marketplace) =====
+model Seller {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName       String
+  slug            String   @unique
+  description     String?
+  logo            String?
+  status          String   @default("pending") // pending, approved, suspended
+  commissionRate  Float    @default(10) // Pourcentage prélevé par la plateforme
+  totalSales      Float    @default(0) // Chiffre d'affaires total (centimes)
+  totalEarnings   Float    @default(0) // Revenus nets après commission (centimes)
+  rating          Float    @default(0) // Note moyenne (1-5)
+  reviewCount     Int      @default(0)
+  products        Product[]
+  orderItems      OrderItem[]
+  payouts         SellerPayout[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([slug])
 }
 
 // ===== PRODUITS =====
@@ -30,7 +68,10 @@ model Product {
   price       Int
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
+  sellerId    String?  // null = produit plateforme (admin), sinon = vendeur
+  seller      Seller?  @relation(fields: [sellerId], references: [id], onDelete: SetNull)
   image       String?
+  images      String[] // Galerie d'images multiples
   description String
   stock       Int      @default(0)
   status      String   @default("active")
@@ -54,6 +95,7 @@ model Product {
   ageGroup    String?
   orderItems  OrderItem[]
   inventory   Inventory?
+  reviews     Review[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -64,7 +106,8 @@ model User {
   email         String         @unique
   password      String
   name          String?
-  role          String         @default("user")
+  role          String         @default("user") // user, admin, seller
+  seller        Seller?
   orders        Order[]
   notifications Notification[]
   createdAt     DateTime       @default(now())
@@ -124,15 +167,21 @@ model Order {
 
 // ===== ÉLÉMENTS DE COMMANDE =====
 model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  unitPrice Float
-  totalPrice Float
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id])
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id])
+  sellerId      String?  // Pour commission et dashboard vendeur
+  seller        Seller?  @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  quantity      Int
+  unitPrice     Float
+  totalPrice    Float
+  commissionAmount Float @default(0) // Commission plateforme (centimes)
+  sellerEarnings   Float @default(0) // Revenus vendeur après commission (centimes)
+  createdAt     DateTime @default(now())
+
+  @@index([sellerId])
 }
 
 // ===== PAIEMENTS =====
@@ -208,6 +257,26 @@ model Notification {
   createdAt DateTime         @default(now())
 }
 
+// ===== AVIS CLIENTS =====
+model Review {
+  id        String   @id @default(uuid())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerName String
+  customerEmail String?
+  rating    Int      // 1-5 étoiles
+  title     String?
+  comment   String
+  isVerified Boolean  @default(false) // Avis vérifié (client ayant acheté)
+  helpful   Int      @default(0) // Nombre de personnes ayant trouvé l'avis utile
+  status    String   @default("approved") // approved, pending, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([status])
+}
+
 // ===== ENUMS =====
 enum OrderStatus {
   PENDING
@@ -260,4 +329,22 @@ enum NotificationType {
   PAYMENT
   SHIPPING
   SYSTEM
-} 
+}
+
+// ===== VERSEMENTS VENDEURS =====
+model SellerPayout {
+  id          String   @id @default(uuid())
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  amount      Float    // Montant versé (centimes)
+  status      String   @default("pending") // pending, processing, completed, failed
+  method      String?  // bank_transfer, mobile_money, etc.
+  reference   String?
+  metadata    Json?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sellerId])
+  @@index([status])
+}

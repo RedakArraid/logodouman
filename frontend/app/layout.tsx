@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './styles.css'
 import { StoreProvider } from './contexts/StoreContext'
+import { CartProvider } from './contexts/CartContext'
 
 export const metadata: Metadata = {
   title: 'LogoDouman - Plateforme E-commerce de Nouvelle Génération',
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="fr">
       <body>
         <StoreProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </StoreProvider>
       </body>
     </html>

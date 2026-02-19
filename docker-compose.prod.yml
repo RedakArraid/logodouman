@@ -1,0 +1,186 @@
+# =============================================================================
+# DOCKER COMPOSE - LogoDouman PRODUCTION
+# =============================================================================
+# Configuration indépendante pour l'environnement de production
+# Utilisation: 
+#   - Démarrer: docker compose -f docker-compose.prod.yml --project-name logodouman-prod --env-file .env.production up -d
+#   - Arrêter: docker compose -f docker-compose.prod.yml --project-name logodouman-prod down
+#   - Logs: docker compose -f docker-compose.prod.yml --project-name logodouman-prod logs -f
+#   - Rebuild: docker compose -f docker-compose.prod.yml --project-name logodouman-prod up -d --build
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # LogoDouman Backend
+  # ===========================================================================
+  logodouman-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: logodouman-backend
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=4002
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://${LOGODOUMAN_DB_USER}:${LOGODOUMAN_DB_PASSWORD}@logodouman-db:5432/${LOGODOUMAN_DB_NAME}
+      - REDIS_URL=redis://:${LOGODOUMAN_REDIS_PASSWORD}@logodouman-redis:6379
+      - REDIS_PASSWORD=${LOGODOUMAN_REDIS_PASSWORD}
+      - JWT_SECRET=${LOGODOUMAN_JWT_SECRET}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      - CORS_ORIGIN=${LOGODOUMAN_CORS_ORIGIN}
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-5242880}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FILE=/app/logs/app.log
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    volumes:
+      - logodouman_backend_uploads:/app/uploads
+      - logodouman_backend_logs:/app/logs
+    depends_on:
+      logodouman-db:
+        condition: service_healthy
+      logodouman-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 90s
+    networks:
+      - traefik_network
+      - logodouman_internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.logodouman-api.rule=Host(`apilogodouman.genea.space`)
+      - traefik.http.routers.logodouman-api.entrypoints=websecure
+      - traefik.http.routers.logodouman-api.tls=true
+      - traefik.http.routers.logodouman-api.tls.certresolver=mytlschallenge
+      - traefik.http.services.logodouman-api.loadbalancer.server.port=4002
+
+  # ===========================================================================
+  # LogoDouman Frontend
+  # ===========================================================================
+  logodouman-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://apilogodouman.genea.space}
+    container_name: logodouman-frontend
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://apilogodouman.genea.space}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://logodouman.genea.space}
+      - INTERNAL_API_URL=http://logodouman-backend:4002
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-LogoDouman}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-2.1.0}
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      logodouman-backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - traefik_network
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.logodouman-frontend.rule=Host(`logodouman.genea.space`)
+      - traefik.http.routers.logodouman-frontend.entrypoints=websecure
+      - traefik.http.routers.logodouman-frontend.tls=true
+      - traefik.http.routers.logodouman-frontend.tls.certresolver=mytlschallenge
+      - traefik.http.services.logodouman-frontend.loadbalancer.server.port=3001
+
+  # ===========================================================================
+  # LogoDouman Database (PostgreSQL)
+  # ===========================================================================
+  logodouman-db:
+    image: postgres:16-alpine
+    container_name: logodouman-db
+    env_file:
+      - .env.production
+    environment:
+      - POSTGRES_DB=${LOGODOUMAN_DB_NAME:-logodouman}
+      - POSTGRES_USER=${LOGODOUMAN_DB_USER}
+      - POSTGRES_PASSWORD=${LOGODOUMAN_DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+    volumes:
+      - logodouman_postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOGODOUMAN_DB_USER:-postgres} -d ${LOGODOUMAN_DB_NAME:-logodouman}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - logodouman_internal
+
+  # ===========================================================================
+  # LogoDouman Redis
+  # ===========================================================================
+  logodouman-redis:
+    image: redis:7-alpine
+    container_name: logodouman-redis
+    env_file:
+      - .env.production
+    command: redis-server --requirepass ${LOGODOUMAN_REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - logodouman_redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${LOGODOUMAN_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - logodouman_internal
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Réseau externe partagé avec Traefik (reverse proxy)
+  traefik_network:
+    external: true
+  # Réseau interne isolé pour la base de données et Redis
+  logodouman_internal:
+    internal: true
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  logodouman_postgres_data:
+    name: root_logodouman_postgres_data
+    external: true
+  logodouman_redis_data:
+    name: root_logodouman_redis_data
+    external: true
+  logodouman_backend_uploads:
+    name: root_logodouman_backend_uploads
+    external: true
+  logodouman_backend_logs:
+    name: root_logodouman_backend_logs
+    external: true
+

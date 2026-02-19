@@ -1,20 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useCart } from '../contexts/CartContext';
 import { 
   Bars3Icon,
   XMarkIcon,
   ShoppingBagIcon,
   HomeIcon,
   NewspaperIcon,
-  EnvelopeIcon
+  EnvelopeIcon,
+  StorefrontIcon
 } from '@heroicons/react/24/outline';
 
 export default function PublicHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { totalItems, items } = useCart();
+
+  // Debug: vérifier la valeur du panier quand elle change
+  useEffect(() => {
+    console.log('🛒 Header - Total items dans le panier:', totalItems, 'Items:', items.length);
+  }, [totalItems, items.length]);
 
   const isActive = (path: string) => pathname === path;
 
@@ -63,13 +71,32 @@ export default function PublicHeader() {
             })}
           </nav>
 
-          {/* Bouton Panier (futur) */}
+          {/* Bouton Panier + Vendeur */}
           <div className="hidden md:flex items-center gap-3">
-            <button className="relative p-2 text-gray-700 hover:text-orange-600 transition-colors">
+            <Link
+              href="/vendeur"
+              className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-orange-600 text-sm font-medium transition-colors"
+            >
+              <StorefrontIcon className="w-5 h-5" />
+              Devenir vendeur
+            </Link>
+            <button
+              onClick={() => {
+                console.log('🛒 Clic sur le panier - Navigation vers /panier, totalItems:', totalItems);
+                window.location.href = '/panier';
+              }}
+              className="relative inline-block p-2 text-gray-700 hover:text-orange-600 transition-colors cursor-pointer"
+              title="Voir le panier"
+            >
               <ShoppingBagIcon className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                0
-              </span>
+              {totalItems > 0 && (
+                <span 
+                  className="absolute top-0 right-0 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center transform translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ zIndex: 10 }}
+                >
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
             </button>
           </div>
 
@@ -88,8 +115,8 @@ export default function PublicHeader() {
 
         {/* Menu Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100 animate-fadeIn">
-            <nav className="flex flex-col space-y-1">
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <nav className="flex flex-col gap-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -97,24 +124,30 @@ export default function PublicHeader() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all
-                      ${isActive(link.href)
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                        : 'text-gray-700 hover:bg-orange-50'
-                      }
-                    `}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive(link.href)
+                        ? 'bg-orange-100 text-orange-600 font-bold'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
                     <Icon className="w-5 h-5" />
                     {link.label}
                   </Link>
                 );
               })}
-              
-              {/* Panier mobile */}
-              <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-orange-50 font-medium">
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  window.location.href = '/panier';
+                }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full text-left ${
+                  isActive('/panier')
+                    ? 'bg-orange-100 text-orange-600 font-bold'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <ShoppingBagIcon className="w-5 h-5" />
-                Panier (0)
+                Panier {totalItems > 0 && `(${totalItems})`}
               </button>
             </nav>
           </div>

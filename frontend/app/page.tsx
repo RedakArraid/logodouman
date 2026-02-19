@@ -119,32 +119,19 @@ export default function HomePage() {
             {categories.map(category => (
               <Link
                 key={category.id}
-                href={`/boutique?category=${category.id}`}
-                className="group relative bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100"
+                href={`/boutique?category=${category.slug}`}
+                className="group relative bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 p-6"
               >
-                <div className="aspect-square overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
-                  <img
-                    src={category.image || `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop`}
-                    alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop`; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-300"></div>
-                </div>
-                
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl">{category.icon}</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-gray-300">
-                        {category.description}
-                      </p>
-                    </div>
+                <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors mb-3">
+                      {category.name}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {category.description}
+                    </p>
                   </div>
-                  <div className="flex items-center text-orange-400 font-semibold text-sm group-hover:gap-2 transition-all">
+                  <div className="flex items-center text-orange-600 font-semibold text-sm group-hover:gap-2 transition-all mt-4 pt-4 border-t border-gray-100">
                     <span>Découvrir</span>
                     <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -225,7 +212,6 @@ export default function HomePage() {
 
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{category?.icon}</span>
                       <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                         {category?.name}
                       </span>

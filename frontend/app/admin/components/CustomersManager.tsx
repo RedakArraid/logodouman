@@ -58,6 +58,10 @@ export default function CustomersManager({ token }: { token: string }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -71,7 +75,15 @@ export default function CustomersManager({ token }: { token: string }) {
 
   useEffect(() => {
     loadCustomers();
-  }, [filterStatus]);
+  }, [filterStatus, page, limit]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setPage(1);
+      loadCustomers();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (selectedCustomer) {
@@ -84,12 +96,19 @@ export default function CustomersManager({ token }: { token: string }) {
       setLoading(true);
       const params = new URLSearchParams();
       if (filterStatus) params.append('status', filterStatus);
-      
-      const response = await fetch(`${API_URL}/api/customers?${params}`, {
+      if (searchTerm.trim()) params.append('search', searchTerm.trim());
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+
+      const response = await fetch(`${API_URL}/api/customers?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       setCustomers(data.customers || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.pages || 1);
+        setTotalCount(data.pagination.total || 0);
+      }
     } catch (error) {
       console.error('Erreur chargement clients:', error);
     } finally {
@@ -182,7 +201,7 @@ export default function CustomersManager({ token }: { token: string }) {
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0
-    }).format(price);
+    }).format((price || 0) / 100);
   };
 
   const formatDate = (date: string) => {
@@ -193,14 +212,8 @@ export default function CustomersManager({ token }: { token: string }) {
     });
   };
 
-  const filteredCustomers = customers.filter(customer => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      customer.firstName.toLowerCase().includes(searchLower) ||
-      customer.lastName.toLowerCase().includes(searchLower) ||
-      customer.email.toLowerCase().includes(searchLower);
-    return matchesSearch;
-  });
+  // Recherche côté serveur => plus de filtrage local
+  const filteredCustomers = customers;
 
   if (loading) {
     return <div className="text-center py-12">Chargement des clients...</div>;
@@ -214,7 +227,7 @@ export default function CustomersManager({ token }: { token: string }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Clients</p>
-              <p className="text-3xl font-bold text-gray-900">{customers.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{totalCount}</p>
             </div>
             <UserIcon className="w-12 h-12 text-blue-500" />
           </div>
@@ -321,6 +334,38 @@ export default function CustomersManager({ token }: { token: string }) {
                         <div className="text-sm text-gray-500">
                           Depuis {formatDate(customer.createdAt)}
                         </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between p-4 border-t bg-white">
+          <div className="text-sm text-gray-600">
+            Page {page} / {totalPages} • {totalCount} client(s)
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Précédent
+            </button>
+            <select
+              value={limit}
+              onChange={(e) => { setPage(1); setLimit(parseInt(e.target.value, 10)); }}
+              className="px-2 py-1 border rounded"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
                       </div>
                     </div>
                   </td>

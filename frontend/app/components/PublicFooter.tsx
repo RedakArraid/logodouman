@@ -95,10 +95,10 @@ export default function PublicFooter() {
               {categories.map(category => (
                 <li key={category.id}>
                   <Link
-                    href={`/boutique?category=${category.id}`}
+                    href={`/boutique?category=${category.slug}`}
                     className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
                   >
-                    <span className="text-lg">{category.icon}</span>
+                    <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
                     {category.name}
                   </Link>
                 </li>

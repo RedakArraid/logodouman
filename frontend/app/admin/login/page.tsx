@@ -35,8 +35,12 @@ export default function AdminLogin() {
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_user', JSON.stringify(data.user));
         
-        // Rediriger vers le dashboard
-        router.push('/admin/dashboard');
+        // Vendeur approuvé → dashboard vendeur, sinon admin
+        if (data.user?.role === 'seller') {
+          router.push('/vendeur/dashboard');
+        } else {
+          router.push('/admin/dashboard');
+        }
       } else {
         setLoginError(data.error || 'Erreur de connexion');
       }

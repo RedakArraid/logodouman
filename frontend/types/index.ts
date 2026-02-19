@@ -14,14 +14,36 @@ export interface User {
 export interface Category {
   id: string;
   name: string;
-  icon: string;
-  image?: string;
+  slug: string;
   description: string;
   status: 'active' | 'inactive';
+  // Hiérarchie : sous-catégories
+  parentId?: string | null;
+  parent?: Category;
+  subcategories?: Category[];
+  displayOrder: number;
+  // Relations
   products?: Product[];
   productCount?: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Seller {
+  id: string;
+  storeName: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  status: 'pending' | 'approved' | 'suspended';
+  commissionRate: number;
+  totalSales: number;
+  totalEarnings: number;
+  rating: number;
+  reviewCount: number;
+  productCount?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Product {
@@ -30,7 +52,10 @@ export interface Product {
   price: number; // TOUJOURS en centimes pour éviter les erreurs de calcul
   categoryId: string;
   category?: Category;
+  sellerId?: string;
+  seller?: Seller;
   image?: string;
+  images?: string[]; // Galerie d'images multiples
   description: string;
   stock: number;
   status: 'active' | 'inactive';
@@ -187,6 +212,34 @@ export interface Notification {
   createdAt: Date;
 }
 
+export interface Review {
+  id: string;
+  productId: number;
+  product?: Product;
+  customerName: string;
+  customerEmail?: string;
+  rating: number; // 1-5 étoiles
+  title?: string;
+  comment: string;
+  isVerified: boolean;
+  helpful: number;
+  status: 'approved' | 'pending' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReviewStats {
+  total: number;
+  averageRating: number;
+  ratingDistribution: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
 // Enums
 export enum OrderStatus {
   PENDING = 'PENDING',
@@ -280,7 +333,7 @@ export interface DashboardStats {
 
 // Types pour les formulaires
 export interface ProductFormData extends Omit<Product, 'id' | 'createdAt' | 'updatedAt'> {}
-export interface CategoryFormData extends Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'products'> {}
+export interface CategoryFormData extends Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'products' | 'parent' | 'subcategories'> {}
 export interface CustomerFormData extends Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'orders' | 'totalSpent'> {}
 
 // Types pour l'authentification

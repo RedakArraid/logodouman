@@ -132,14 +132,44 @@ router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res
   try {
     const data = orderSchema.parse(req.body);
     
-    // Calculer le total des items
-    const itemsTotal = data.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    // Récupérer les produits et vendeurs pour calcul des commissions
+    const productIds = [...new Set(data.items.map(i => i.productId))];
+    const products = await db.product.findMany({
+      where: { id: { in: productIds } },
+      include: { seller: true }
+    });
+    const productMap = Object.fromEntries(products.map(p => [p.id, p]));
+
+    const itemsWithCommission = await Promise.all(data.items.map(async (item) => {
+      const totalPrice = item.unitPrice * item.quantity;
+      const product = productMap[item.productId];
+      let sellerId = null;
+      let commissionAmount = 0;
+      let sellerEarnings = totalPrice;
+
+      if (product?.seller) {
+        sellerId = product.seller.id;
+        const rate = product.seller.commissionRate || 10;
+        commissionAmount = Math.round(totalPrice * (rate / 100));
+        sellerEarnings = totalPrice - commissionAmount;
+      }
+
+      return {
+        productId: item.productId,
+        sellerId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice,
+        commissionAmount,
+        sellerEarnings
+      };
+    }));
     
     // Créer la commande avec les items
     const order = await db.order.create({
       data: {
         customerId: data.customerId,
-        userId: data.userId,
+        userId: data.userId || req.user?.userId,
         status: data.status || 'PENDING',
         totalAmount: data.totalAmount,
         taxAmount: data.taxAmount || 0,
@@ -148,19 +178,15 @@ router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res
         promotionCode: data.promotionCode,
         notes: data.notes,
         items: {
-          create: data.items.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.unitPrice * item.quantity
-          }))
+          create: itemsWithCommission
         }
       },
       include: {
         customer: true,
         items: {
           include: {
-            product: true
+            product: true,
+            seller: { select: { id: true, storeName: true, slug: true } }
           }
         }
       }
@@ -168,11 +194,36 @@ router.post('/', requireAuth, requireRole(['admin', 'manager']), async (req, res
 
     // Mettre à jour l'inventaire
     for (const item of data.items) {
-      await db.inventory.update({
-        where: { productId: item.productId },
+      try {
+        await db.inventory.update({
+          where: { productId: item.productId },
+          data: {
+            reserved: { increment: item.quantity },
+            available: { decrement: item.quantity }
+          }
+        });
+      } catch (e) {
+        // Inventaire peut ne pas exister pour tous les produits
+      }
+    }
+
+    // Mettre à jour les stats vendeurs (totalSales, totalEarnings)
+    const sellerUpdates = {};
+    for (const item of itemsWithCommission) {
+      if (item.sellerId) {
+        if (!sellerUpdates[item.sellerId]) {
+          sellerUpdates[item.sellerId] = { sales: 0, earnings: 0 };
+        }
+        sellerUpdates[item.sellerId].sales += item.totalPrice;
+        sellerUpdates[item.sellerId].earnings += item.sellerEarnings;
+      }
+    }
+    for (const [sid, totals] of Object.entries(sellerUpdates)) {
+      await db.seller.update({
+        where: { id: sid },
         data: {
-          reserved: { increment: item.quantity },
-          available: { decrement: item.quantity }
+          totalSales: { increment: totals.sales },
+          totalEarnings: { increment: totals.earnings }
         }
       });
     }

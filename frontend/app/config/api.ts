@@ -12,6 +12,7 @@ export const apiConfig = {
 export const apiEndpoints = {
   auth: {
     login: '/api/auth/login',
+    signup: '/api/auth/signup',
     verify: '/api/auth/verify',
     logout: '/api/auth/logout',
   },
@@ -20,6 +21,7 @@ export const apiEndpoints = {
   orders: '/api/orders',
   customers: '/api/customers',
   dashboard: '/api/dashboard',
+  sellers: '/api/sellers',
 };
 
 // Service API avec gestion d'erreur robuste
@@ -373,6 +375,56 @@ export class CategoryService {
   }
 }
 
+export class SellerService {
+  static async getAll(params?: { page?: number; search?: string }) {
+    const q = new URLSearchParams();
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.search) q.set('search', params.search);
+    const query = q.toString();
+    const response = await apiService.get(`/api/sellers${query ? `?${query}` : ''}`);
+    return response;
+  }
+
+  static async getBySlug(slug: string) {
+    return apiService.get(`/api/sellers/slug/${slug}`);
+  }
+
+  static async register(data: { storeName: string; slug?: string; description?: string; logo?: string }) {
+    return apiService.post('/api/sellers/register', data);
+  }
+
+  static async getMyProfile() {
+    return apiService.get('/api/sellers/me/profile');
+  }
+
+  static async updateMyProfile(data: { storeName?: string; description?: string; logo?: string }) {
+    return apiService.put('/api/sellers/me/profile', data);
+  }
+
+  static async getMyProducts(page = 1) {
+    return apiService.get(`/api/sellers/me/products?page=${page}`);
+  }
+
+  static async getMyOrders(page = 1, status?: string) {
+    const q = new URLSearchParams({ page: String(page) });
+    if (status) q.set('status', status);
+    return apiService.get(`/api/sellers/me/orders?${q}`);
+  }
+
+  static async getMyEarnings() {
+    return apiService.get('/api/sellers/me/earnings');
+  }
+
+  static async adminGetAll(status?: string) {
+    const q = status ? `?status=${status}` : '';
+    return apiService.get(`/api/sellers/admin/all${q}`);
+  }
+
+  static async adminApprove(sellerId: string, data: { status: 'approved' | 'suspended'; commissionRate?: number }) {
+    return apiService.put(`/api/sellers/admin/${sellerId}/approve`, data);
+  }
+}
+
 export class AuthService {
   static async login(email: string, password: string) {
     try {
@@ -414,6 +466,55 @@ export class AuthService {
 
   static getToken(): string | null {
     return apiService.getAuthToken();
+  }
+}
+
+export class ReviewService {
+  static async getByProductId(productId: number) {
+    try {
+      const response = await apiService.get(`/api/reviews/${productId}`);
+      return response.reviews || [];
+    } catch (error) {
+      console.error('Erreur lors du chargement des avis:', error);
+      return [];
+    }
+  }
+
+  static async getStats(productId: number) {
+    try {
+      const response = await apiService.get(`/api/reviews/${productId}/stats`);
+      return response.stats || null;
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+      return null;
+    }
+  }
+
+  static async create(reviewData: {
+    productId: number;
+    customerName: string;
+    customerEmail?: string;
+    rating: number;
+    title?: string;
+    comment: string;
+  }) {
+    try {
+      const response = await apiService.post('/api/reviews', reviewData);
+      return response.review || response;
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'avis:', error);
+      throw error;
+    }
+  }
+
+  static async markHelpful(reviewId: string) {
+    try {
+      const response = await apiService.put(`/api/reviews/${reviewId}/helpful`);
+      return response.review || response;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      throw error;
+    }
   }
 }
 

@@ -61,8 +61,8 @@ export default function AdminLogin() {
             <LockClosedIcon className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">LogoDouman</h1>
-          <p className="text-orange-600 font-medium text-lg">Administration</p>
-          <p className="text-gray-500 mt-2">Connectez-vous à votre espace d'administration</p>
+          <p className="text-orange-600 font-medium text-lg">Administration & Vendeurs</p>
+          <p className="text-gray-500 mt-2">Connectez-vous selon votre compte (admin ou vendeur)</p>
         </div>
 
         {/* Formulaire de connexion */}

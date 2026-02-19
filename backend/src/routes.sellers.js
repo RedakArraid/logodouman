@@ -29,7 +29,13 @@ const registerSellerSchema = z.object({
 const updateSellerSchema = z.object({
   storeName: z.string().min(2).max(100).optional(),
   description: z.string().max(500).optional(),
-  logo: z.string().url().optional()
+  logo: z.string().url().optional(),
+  paymentInfo: z.object({
+    method: z.enum(['mobile_money', 'bank_transfer', 'orange_money', 'mtn_money']),
+    accountNumber: z.string(),
+    accountName: z.string(),
+    operator: z.string().optional()
+  }).optional()
 });
 
 const approveSellerSchema = z.object({
@@ -173,6 +179,17 @@ router.post('/register', requireAuth, async (req, res) => {
 
 // ==================== DASHBOARD VENDEUR (avant /:id) ====================
 
+// GET vérifier si l'utilisateur a un compte vendeur (même en attente)
+router.get('/me/status', requireAuth, async (req, res) => {
+  try {
+    const seller = await db.seller.findUnique({ where: { userId: req.user.userId } });
+    res.json({ hasSeller: !!seller, status: seller?.status || null });
+  } catch (error) {
+    console.error('Erreur GET /sellers/me/status:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET mon profil vendeur
 router.get('/me/profile', requireAuth, requireSeller, async (req, res) => {
   try {
@@ -291,6 +308,57 @@ router.get('/me/orders', requireAuth, requireSeller, async (req, res) => {
   }
 });
 
+// POST demander un versement
+router.post('/me/payouts/request', requireAuth, requireSeller, async (req, res) => {
+  try {
+    const { amount } = req.body; // en centimes
+    const amountNum = Math.round(Number(amount) || 0);
+    const MIN_PAYOUT = 500000; // 5000 FCFA en centimes
+    if (amountNum < MIN_PAYOUT) {
+      return res.status(400).json({ error: `Montant minimum: ${(MIN_PAYOUT / 100).toLocaleString()} FCFA` });
+    }
+    const seller = await db.seller.findUnique({ where: { id: req.seller.id } });
+    const paidOut = (await db.sellerPayout.aggregate({
+      where: { sellerId: req.seller.id, status: 'completed' },
+      _sum: { amount: true }
+    }))._sum.amount || 0;
+    const availableBalance = seller.totalEarnings - paidOut;
+    if (amountNum > availableBalance) {
+      return res.status(400).json({ error: 'Solde insuffisant.' });
+    }
+    if (!seller.paymentInfo) {
+      return res.status(400).json({ error: 'Configurez vos informations de paiement dans votre profil.' });
+    }
+    const payout = await db.sellerPayout.create({
+      data: {
+        sellerId: req.seller.id,
+        amount: amountNum,
+        status: 'pending',
+        method: seller.paymentInfo?.method
+      }
+    });
+    res.status(201).json(payout);
+  } catch (error) {
+    console.error('Erreur POST /sellers/me/payouts/request:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET mes versements
+router.get('/me/payouts', requireAuth, requireSeller, async (req, res) => {
+  try {
+    const payouts = await db.sellerPayout.findMany({
+      where: { sellerId: req.seller.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+    res.json(payouts);
+  } catch (error) {
+    console.error('Erreur GET /sellers/me/payouts:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET mes revenus / statistiques
 router.get('/me/earnings', requireAuth, requireSeller, async (req, res) => {
   try {
@@ -344,6 +412,42 @@ router.get('/admin/all', requireAuth, requireAdmin, async (req, res) => {
     })));
   } catch (error) {
     console.error('Erreur GET /sellers/admin/all:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET tous les payouts (admin)
+router.get('/admin/payouts', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const where = status ? { status } : {};
+    const payouts = await db.sellerPayout.findMany({
+      where,
+      include: { seller: { select: { storeName: true, slug: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+    res.json(payouts);
+  } catch (error) {
+    console.error('Erreur GET /sellers/admin/payouts:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// PUT traiter un payout (admin)
+router.put('/admin/payouts/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { status, reference } = req.body;
+    const payout = await db.sellerPayout.update({
+      where: { id: req.params.id },
+      data: {
+        ...(status && { status }),
+        ...(reference && { reference }),
+        ...(status === 'completed' && { paidAt: new Date() })
+      }
+    });
+    res.json(payout);
+  } catch (error) {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

@@ -39,6 +39,7 @@ export default function BoutiquePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [selectedSellerId, setSelectedSellerId] = useState<string>('all');
 
   const products = isHydrated ? getActiveProducts() : [];
   const categories = isHydrated ? getActiveCategories() : [];
@@ -79,6 +80,16 @@ export default function BoutiquePage() {
       }
     });
     return Array.from(materials).sort();
+  }, [products]);
+
+  const availableSellers = useMemo(() => {
+    const seen = new Map<string, { id: string; storeName: string; slug: string }>();
+    products.forEach(p => {
+      if (p.seller?.id && !seen.has(p.seller.id)) {
+        seen.set(p.seller.id, { id: p.seller.id, storeName: p.seller.storeName, slug: p.seller.slug });
+      }
+    });
+    return Array.from(seen.values()).sort((a, b) => a.storeName.localeCompare(b.storeName));
   }, [products]);
 
   // 🔧 FIX: Debounce pour la recherche (300ms)
@@ -125,8 +136,11 @@ export default function BoutiquePage() {
       // Filtre matériau
       const materialMatch = selectedMaterials.length === 0 ||
         (product.material && selectedMaterials.includes(product.material));
+
+      // Filtre vendeur
+      const sellerMatch = selectedSellerId === 'all' || product.sellerId === selectedSellerId;
       
-      return categoryMatch && priceMatch && searchMatch && colorMatch && materialMatch;
+      return categoryMatch && priceMatch && searchMatch && colorMatch && materialMatch && sellerMatch;
     });
 
     // 🔧 FIX: Tri sans mutation (slice pour créer une copie)
@@ -145,7 +159,7 @@ export default function BoutiquePage() {
       default:
         return sorted;
     }
-  }, [isHydrated, products, selectedCategory, minPrice, maxPrice, debouncedSearchQuery, sortBy, selectedColors, selectedMaterials]);
+  }, [isHydrated, products, selectedCategory, minPrice, maxPrice, debouncedSearchQuery, sortBy, selectedColors, selectedMaterials, selectedSellerId]);
 
   // 🔧 FIX: Reset avec les vraies valeurs de priceStats
   const resetFilters = useCallback(() => {
@@ -157,6 +171,7 @@ export default function BoutiquePage() {
     setSortBy('newest');
     setSelectedColors([]);
     setSelectedMaterials([]);
+    setSelectedSellerId('all');
   }, [priceStats.min, priceStats.max]);
 
   // 🔧 FIX: Compteur de filtres actifs avec tolérance pour les prix
@@ -174,8 +189,9 @@ export default function BoutiquePage() {
     if (debouncedSearchQuery !== '') count++;
     if (selectedColors.length > 0) count += selectedColors.length;
     if (selectedMaterials.length > 0) count += selectedMaterials.length;
+    if (selectedSellerId !== 'all') count++;
     return count;
-  }, [selectedCategory, minPrice, maxPrice, debouncedSearchQuery, selectedColors, selectedMaterials, priceStats.min, priceStats.max]);
+  }, [selectedCategory, minPrice, maxPrice, debouncedSearchQuery, selectedColors, selectedMaterials, selectedSellerId, priceStats.min, priceStats.max]);
 
   if (!isHydrated) {
     return (
@@ -373,6 +389,9 @@ export default function BoutiquePage() {
                 setSelectedColors={setSelectedColors}
                 selectedMaterials={selectedMaterials}
                 setSelectedMaterials={setSelectedMaterials}
+                availableSellers={availableSellers}
+                selectedSellerId={selectedSellerId}
+                setSelectedSellerId={setSelectedSellerId}
                 onReset={resetFilters}
                 activeFiltersCount={activeFiltersCount}
                 productsCount={products.length}
@@ -436,10 +455,19 @@ export default function BoutiquePage() {
                           <div className="flex-1 p-6">
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                   <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                                     {category?.name}
                                   </span>
+                                  {product.seller?.slug && (
+                                    <Link
+                                      href={`/vendeur/${product.seller.slug}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-xs text-gray-500 hover:text-orange-600"
+                                    >
+                                      Vendu par {product.seller.storeName}
+                                    </Link>
+                                  )}
                                 </div>
                                 <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                                   {product.name}
@@ -560,10 +588,19 @@ export default function BoutiquePage() {
 
                       {/* Contenu */}
                       <div className="p-5">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                             {category?.name}
                           </span>
+                          {product.seller?.slug && (
+                            <Link
+                              href={`/vendeur/${product.seller.slug}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs text-gray-500 hover:text-orange-600"
+                            >
+                              Vendu par {product.seller.storeName}
+                            </Link>
+                          )}
                         </div>
 
                         <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2 cursor-pointer">
@@ -678,6 +715,9 @@ export default function BoutiquePage() {
                 setSelectedColors={setSelectedColors}
                 selectedMaterials={selectedMaterials}
                 setSelectedMaterials={setSelectedMaterials}
+                availableSellers={availableSellers}
+                selectedSellerId={selectedSellerId}
+                setSelectedSellerId={setSelectedSellerId}
                 onReset={resetFilters}
                 activeFiltersCount={activeFiltersCount}
                 productsCount={products.length}

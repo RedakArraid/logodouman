@@ -33,6 +33,12 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         });
 
         if (response.ok) {
+          const data = await response.json();
+          // Les vendeurs ne peuvent pas accéder à l'admin : redirection vers leur espace
+          if (data.user?.role === 'seller') {
+            router.push('/vendeur/dashboard');
+            return;
+          }
           setIsAuthenticated(true);
         } else {
           // Token invalide, nettoyer et rediriger
@@ -46,6 +52,16 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         // Pour le développement, on permet l'accès
         const token = localStorage.getItem('admin_token');
         if (token) {
+          const savedUser = localStorage.getItem('admin_user');
+          if (savedUser) {
+            try {
+              const user = JSON.parse(savedUser);
+              if (user?.role === 'seller') {
+                router.push('/vendeur/dashboard');
+                return;
+              }
+            } catch (_) { /* ignore */ }
+          }
           setIsAuthenticated(true);
         } else {
           router.push('/admin/login');

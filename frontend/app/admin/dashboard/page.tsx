@@ -11,7 +11,8 @@ import {
   BellIcon,
   ArrowPathIcon,
   Cog6ToothIcon,
-  BuildingStorefrontIcon
+  BuildingStorefrontIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import AuthGuard from '../components/AuthGuard';
 import ProductsManager from '../components/ProductsManager';
@@ -22,7 +23,8 @@ import KPIGrid from '../components/KPIGrid';
 import SalesCharts from '../components/SalesCharts';
 import AlertsManager from '../components/AlertsManager';
 import SellersManager from '../components/SellersManager';
-import { apiService, CategoryService } from '../../config/api';
+import PayoutsManager from '../components/PayoutsManager';
+import { apiService, CategoryService, SellerService } from '../../config/api';
 
 // Interface Category définie localement
 interface Category {
@@ -78,22 +80,28 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [alerts, setAlerts] = useState([]);
+  const [marketplaceStats, setMarketplaceStats] = useState<{ sellersTotal: number; sellersApproved: number; payoutsPending: number } | null>(null);
 
   // États pour la navigation
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'vendeurs'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'vendeurs' | 'payouts'>('dashboard');
 
-  // Vérifier l'authentification au chargement
+  // Vérifier l'authentification au chargement (admin/manager uniquement, pas vendeurs)
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_token');
     const savedUser = localStorage.getItem('admin_user');
     
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    } else {
+    if (!savedToken || !savedUser) {
       router.push('/admin/login');
       return;
     }
+    const parsedUser = JSON.parse(savedUser);
+    // Les vendeurs doivent utiliser leur espace /vendeur, pas l'admin
+    if (parsedUser?.role === 'seller') {
+      router.push('/vendeur/dashboard');
+      return;
+    }
+    setToken(savedToken);
+    setUser(parsedUser);
     setLoading(false);
   }, [router]);
 
@@ -114,14 +122,16 @@ export default function AdminDashboard() {
       // Charger les vraies données depuis l'API
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002';
       
-      const [dashboardRes, categoriesRes, alertsRes] = await Promise.allSettled([
+      const [dashboardRes, categoriesRes, alertsRes, sellersRes, payoutsRes] = await Promise.allSettled([
         fetch(`${API_URL}/api/dashboard/overview?period=30`, {
           headers: { Authorization: `Bearer ${token}` }
         }).then(res => res.json()),
         CategoryService.getAll(),
         fetch(`${API_URL}/api/dashboard/alerts`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).then(res => res.json())
+        }).then(res => res.json()),
+        (user?.role === 'admin' || user?.role === 'manager') ? SellerService.adminGetAll() : Promise.resolve(null),
+        (user?.role === 'admin' || user?.role === 'manager') ? SellerService.adminGetPayouts('pending') : Promise.resolve([])
       ]);
 
       // Charger les données du dashboard
@@ -167,6 +177,18 @@ export default function AdminDashboard() {
       // Charger les alertes
       if (alertsRes.status === 'fulfilled') {
         setAlerts(alertsRes.value);
+      }
+
+      // Stats marketplace (admin/manager)
+      if ((user?.role === 'admin' || user?.role === 'manager') && sellersRes.status === 'fulfilled' && sellersRes.value) {
+        const sellers = Array.isArray(sellersRes.value) ? sellersRes.value : (sellersRes.value as any).sellers || [];
+        const approved = sellers.filter((s: any) => s.status === 'approved').length;
+        const payouts = payoutsRes.status === 'fulfilled' && Array.isArray(payoutsRes.value) ? payoutsRes.value : [];
+        setMarketplaceStats({
+          sellersTotal: sellers.length,
+          sellersApproved: approved,
+          payoutsPending: payouts.length
+        });
       }
       
     } catch (error) {
@@ -285,17 +307,30 @@ export default function AdminDashboard() {
               </button>
               
               {(user?.role === 'admin' || user?.role === 'manager') && (
-                <button
-                  onClick={() => setActiveSection('vendeurs')}
-                  className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                    activeSection === 'vendeurs' 
-                      ? 'bg-orange-600 text-white' 
-                      : 'text-gray-700 hover:bg-orange-50'
-                  }`}
-                >
-                  <BuildingStorefrontIcon className="w-5 h-5" />
-                  Vendeurs
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveSection('vendeurs')}
+                    className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                      activeSection === 'vendeurs' 
+                        ? 'bg-orange-600 text-white' 
+                        : 'text-gray-700 hover:bg-orange-50'
+                    }`}
+                  >
+                    <BuildingStorefrontIcon className="w-5 h-5" />
+                    Vendeurs
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('payouts')}
+                    className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                      activeSection === 'payouts' 
+                        ? 'bg-orange-600 text-white' 
+                        : 'text-gray-700 hover:bg-orange-50'
+                    }`}
+                  >
+                    <BanknotesIcon className="w-5 h-5" />
+                    Versements
+                  </button>
+                </>
               )}
             </nav>
           </div>
@@ -318,6 +353,9 @@ export default function AdminDashboard() {
               alerts={alerts} 
               loading={refreshing}
               onRefresh={handleRefresh}
+              marketplaceStats={marketplaceStats}
+              onNavigatePayouts={() => setActiveSection('payouts')}
+              onNavigateVendeurs={() => setActiveSection('vendeurs')}
             />
           )}
           
@@ -354,6 +392,12 @@ export default function AdminDashboard() {
               <SellersManager />
             </div>
           )}
+          {activeSection === 'payouts' && (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Versements vendeurs</h1>
+              <PayoutsManager />
+            </div>
+          )}
         </main>
       </div>
     </AuthGuard>
@@ -365,12 +409,18 @@ function DashboardAnalytics({
   stats, 
   alerts, 
   loading,
-  onRefresh 
+  onRefresh,
+  marketplaceStats,
+  onNavigatePayouts,
+  onNavigateVendeurs
 }: { 
   stats: DashboardStats | null; 
   alerts: any[]; 
   loading: boolean;
   onRefresh: () => void;
+  marketplaceStats?: { sellersTotal: number; sellersApproved: number; payoutsPending: number } | null;
+  onNavigatePayouts?: () => void;
+  onNavigateVendeurs?: () => void;
 }) {
   return (
     <div className="space-y-8">
@@ -389,6 +439,28 @@ function DashboardAnalytics({
           Actualiser
         </button>
       </div>
+
+      {/* Stats Marketplace */}
+      {marketplaceStats && (onNavigateVendeurs || onNavigatePayouts) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={onNavigateVendeurs}
+            className="bg-white rounded-xl p-4 shadow border border-orange-100 hover:border-orange-300 text-left transition-colors"
+          >
+            <BuildingStorefrontIcon className="w-8 h-8 text-orange-500 mb-2" />
+            <p className="text-sm text-gray-500">Vendeurs</p>
+            <p className="text-2xl font-bold text-gray-900">{marketplaceStats.sellersTotal} total ({marketplaceStats.sellersApproved} actifs)</p>
+          </button>
+          <button
+            onClick={onNavigatePayouts}
+            className="bg-white rounded-xl p-4 shadow border border-orange-100 hover:border-orange-300 text-left transition-colors"
+          >
+            <BanknotesIcon className="w-8 h-8 text-orange-500 mb-2" />
+            <p className="text-sm text-gray-500">Versements en attente</p>
+            <p className="text-2xl font-bold text-gray-900">{marketplaceStats.payoutsPending}</p>
+          </button>
+        </div>
+      )}
 
       {/* KPIs principaux */}
       <KPIGrid data={stats} loading={loading} />

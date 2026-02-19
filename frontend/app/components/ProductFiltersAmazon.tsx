@@ -34,6 +34,9 @@ interface ProductFiltersAmazonProps {
   setSelectedColors: (colors: string[]) => void;
   selectedMaterials: string[];
   setSelectedMaterials: (materials: string[]) => void;
+  availableSellers?: { id: string; storeName: string; slug: string }[];
+  selectedSellerId?: string;
+  setSelectedSellerId?: (id: string) => void;
   
   // Actions
   onReset: () => void;
@@ -57,12 +60,17 @@ export default function ProductFiltersAmazon({
   setSelectedColors,
   selectedMaterials,
   setSelectedMaterials,
+  availableSellers = [],
+  selectedSellerId = 'all',
+  setSelectedSellerId,
   onReset,
   activeFiltersCount,
   productsCount
 }: ProductFiltersAmazonProps) {
 
-  const [expandedSections, setExpandedSections] = useState<string[]>(['categories', 'price']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(
+    availableSellers.length > 0 ? ['categories', 'price', 'sellers'] : ['categories', 'price']
+  );
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
   const toggleSection = (section: string) => {
@@ -161,6 +169,46 @@ export default function ProductFiltersAmazon({
           </div>
         )}
       </div>
+
+      {/* Section Boutiques */}
+      {availableSellers.length > 0 && setSelectedSellerId && (
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection('sellers')}
+            className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="font-bold text-sm text-gray-900 uppercase">Boutiques</span>
+            {expandedSections.includes('sellers') ? (
+              <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          {expandedSections.includes('sellers') && (
+            <div className="pb-3 space-y-1">
+              <button
+                onClick={() => setSelectedSellerId('all')}
+                className={`block w-full text-left px-2 py-1.5 text-sm transition-colors ${
+                  selectedSellerId === 'all' ? 'text-orange-600 font-bold' : 'text-gray-700 hover:text-orange-600'
+                }`}
+              >
+                Toutes les boutiques
+              </button>
+              {availableSellers.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSellerId(s.id)}
+                  className={`block w-full text-left px-2 py-1.5 text-sm transition-colors ${
+                    selectedSellerId === s.id ? 'text-orange-600 font-bold' : 'text-gray-700 hover:text-orange-600'
+                  }`}
+                >
+                  {s.storeName}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Section Prix - Style Amazon */}
       <div className="border-b border-gray-200">

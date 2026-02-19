@@ -393,11 +393,15 @@ export class SellerService {
     return apiService.post('/api/sellers/register', data);
   }
 
+  static async getMyStatus() {
+    return apiService.get('/api/sellers/me/status');
+  }
+
   static async getMyProfile() {
     return apiService.get('/api/sellers/me/profile');
   }
 
-  static async updateMyProfile(data: { storeName?: string; description?: string; logo?: string }) {
+  static async updateMyProfile(data: { storeName?: string; description?: string; logo?: string; paymentInfo?: { method: string; accountNumber: string; accountName: string; operator?: string } }) {
     return apiService.put('/api/sellers/me/profile', data);
   }
 
@@ -423,6 +427,23 @@ export class SellerService {
   static async adminApprove(sellerId: string, data: { status: 'approved' | 'suspended'; commissionRate?: number }) {
     return apiService.put(`/api/sellers/admin/${sellerId}/approve`, data);
   }
+
+  static async requestPayout(amount: number) {
+    return apiService.post('/api/sellers/me/payouts/request', { amount });
+  }
+
+  static async getMyPayouts() {
+    return apiService.get('/api/sellers/me/payouts');
+  }
+
+  static async adminGetPayouts(status?: string) {
+    const q = status ? `?status=${status}` : '';
+    return apiService.get(`/api/sellers/admin/payouts${q}`);
+  }
+
+  static async adminUpdatePayout(payoutId: string, data: { status?: string; reference?: string }) {
+    return apiService.put(`/api/sellers/admin/payouts/${payoutId}`, data);
+  }
 }
 
 export class AuthService {
@@ -446,6 +467,17 @@ export class AuthService {
     } catch (error) {
       console.error('Erreur lors de la vérification du token:', error);
       apiService.removeAuthToken();
+      throw error;
+    }
+  }
+
+  static async signupSeller(data: { email: string; password: string; name?: string; storeName: string; slug?: string; description?: string }) {
+    try {
+      const response = await apiService.post('/api/auth/signup-seller', data);
+      if (response.token) apiService.setAuthToken(response.token);
+      return response;
+    } catch (error) {
+      console.error('Erreur inscription vendeur:', error);
       throw error;
     }
   }

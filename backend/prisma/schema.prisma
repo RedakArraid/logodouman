@@ -47,6 +47,7 @@ model Seller {
   logo            String?
   status          String   @default("pending") // pending, approved, suspended
   commissionRate  Float    @default(10) // Pourcentage prélevé par la plateforme
+  paymentInfo     Json?    // { method, account, name, ... } pour les versements
   totalSales      Float    @default(0) // Chiffre d'affaires total (centimes)
   totalEarnings   Float    @default(0) // Revenus nets après commission (centimes)
   rating          Float    @default(0) // Note moyenne (1-5)

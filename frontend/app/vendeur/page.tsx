@@ -36,9 +36,9 @@ export default function VendeurPage() {
       }
       setIsAuthenticated(true);
       try {
-        const profile = await SellerService.getMyProfile();
-        setHasSellerAccount(true);
-        if (profile.status === 'approved') {
+        const { hasSeller, status } = await SellerService.getMyStatus();
+        setHasSellerAccount(!!hasSeller);
+        if (hasSeller && status === 'approved') {
           router.push('/vendeur/dashboard');
           return;
         }
@@ -106,22 +106,72 @@ export default function VendeurPage() {
           </div>
 
           <div className="text-center">
-            <p className="text-gray-600 mb-4">Connectez-vous ou créez un compte pour vous inscrire comme vendeur.</p>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Link
-                href="/admin/login"
+            <p className="text-gray-600 mb-4">Inscrivez-vous en 1 clic pour devenir vendeur, ou connectez-vous si vous avez déjà un compte.</p>
+            <div className="flex gap-4 justify-center flex-wrap mb-8">
+              <button
+                onClick={() => setShowRegisterForm(true)}
                 className="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700"
               >
-                Se connecter
+                S&apos;inscrire et devenir vendeur
                 <ArrowRightIcon className="w-4 h-4 ml-2" />
-              </Link>
+              </button>
               <Link
-                href="/admin/login?register=1"
+                href="/admin/login"
                 className="inline-flex items-center px-6 py-3 border border-orange-600 text-orange-600 font-medium rounded-lg hover:bg-orange-50"
               >
-                Créer un compte
+                J&apos;ai déjà un compte
               </Link>
             </div>
+            {showRegisterForm && (
+              <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-8 max-w-md mx-auto text-left">
+                <h3 className="text-xl font-semibold mb-6">Inscription vendeur</h3>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setError('');
+                  try {
+                    const d = (e.target as any);
+                    const res = await AuthService.signupSeller({
+                      email: d.email.value,
+                      password: d.password.value,
+                      name: d.name?.value,
+                      storeName: d.storeName.value,
+                      description: d.description?.value || undefined
+                    });
+                    setSuccess(res.message || 'Inscription envoyée !');
+                    setShowRegisterForm(false);
+                    router.push('/vendeur');
+                  } catch (err: any) {
+                    setError(err.message || 'Erreur');
+                  }
+                }} className="space-y-4">
+                  {error && <p className="text-red-600 text-sm">{error}</p>}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
+                    <input name="email" type="email" required className="w-full px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Mot de passe *</label>
+                    <input name="password" type="password" required minLength={8} className="w-full px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nom</label>
+                    <input name="name" className="w-full px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nom de la boutique *</label>
+                    <input name="storeName" required className="w-full px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea name="description" rows={2} className="w-full px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="px-4 py-2 bg-orange-600 text-white rounded-lg">S&apos;inscrire</button>
+                    <button type="button" onClick={() => setShowRegisterForm(false)} className="px-4 py-2 border rounded-lg">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -147,10 +197,8 @@ export default function VendeurPage() {
         {hasSellerAccount && !showRegisterForm ? (
           <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-8 text-center">
             <p className="text-gray-600 mb-4">Vous avez déjà soumis une demande d&apos;inscription vendeur.</p>
-            <p className="text-sm text-gray-500">Un administrateur validera votre compte sous peu.</p>
-            <Link href="/admin/dashboard" className="mt-4 inline-block text-orange-600 hover:underline">
-              Retour à l&apos;administration
-            </Link>
+            <p className="text-sm text-gray-500 mb-4">Un administrateur validera votre compte sous peu. Vous recevrez un email une fois celui-ci activé.</p>
+            <p className="text-xs text-gray-400">Votre espace vendeur sera accessible après validation.</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-8">

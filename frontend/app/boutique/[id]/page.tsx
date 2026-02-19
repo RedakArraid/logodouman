@@ -351,12 +351,20 @@ export default function ProductDetailPage() {
           <div className="space-y-6">
             {/* En-tête */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <span className="text-sm font-bold text-orange-600 uppercase tracking-wide">
                   {category?.name || 'Non catégorisé'}
                 </span>
                 {product.sku && (
                   <span className="text-sm text-gray-500">SKU: {product.sku}</span>
+                )}
+                {(product as any).seller?.slug && (
+                  <Link
+                    href={`/vendeur/${(product as any).seller.slug}`}
+                    className="text-sm text-gray-500 hover:text-orange-600"
+                  >
+                    Vendu par {(product as any).seller.storeName}
+                  </Link>
                 )}
               </div>
               

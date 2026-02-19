@@ -10,7 +10,7 @@ import {
   ShoppingBagIcon,
   ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
-import { AuthService, SellerService } from '@/app/config/api';
+import { AuthService, SellerService } from '../../config/api';
 
 export default function VendeurDashboardPage() {
   const router = useRouter();

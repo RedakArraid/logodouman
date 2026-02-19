@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  StorefrontIcon,
+  BuildingStorefrontIcon,
   ChartBarIcon,
   CubeIcon,
   BanknotesIcon,
   ArrowRightIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
-import { AuthService, SellerService } from '@/app/config/api';
+import { AuthService, SellerService } from '../config/api';
 
 export default function VendeurPage() {
   const router = useRouter();
@@ -93,7 +93,7 @@ export default function VendeurPage() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {[
-              { icon: StorefrontIcon, title: 'Votre boutique', desc: 'Créez votre espace vendeur personnalisé' },
+              { icon: BuildingStorefrontIcon, title: 'Votre boutique', desc: 'Créez votre espace vendeur personnalisé' },
               { icon: ChartBarIcon, title: 'Tableau de bord', desc: 'Suivez vos ventes et revenus en temps réel' },
               { icon: BanknotesIcon, title: 'Commission claire', desc: 'Tarifs transparents, paiements réguliers' },
             ].map(({ icon: Icon, title, desc }) => (

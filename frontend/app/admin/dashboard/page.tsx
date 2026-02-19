@@ -11,7 +11,7 @@ import {
   BellIcon,
   ArrowPathIcon,
   Cog6ToothIcon,
-  StorefrontIcon
+  BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
 import AuthGuard from '../components/AuthGuard';
 import ProductsManager from '../components/ProductsManager';
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
                       : 'text-gray-700 hover:bg-orange-50'
                   }`}
                 >
-                  <StorefrontIcon className="w-5 h-5" />
+                  <BuildingStorefrontIcon className="w-5 h-5" />
                   Vendeurs
                 </button>
               )}

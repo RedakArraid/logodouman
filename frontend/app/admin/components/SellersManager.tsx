@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { StorefrontIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { BuildingStorefrontIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { SellerService } from '../../config/api';
 
 interface Seller {
@@ -60,7 +60,7 @@ export default function SellersManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <StorefrontIcon className="w-6 h-6 text-orange-500" />
+          <BuildingStorefrontIcon className="w-6 h-6 text-orange-500" />
           Gestion des vendeurs
         </h2>
         <select

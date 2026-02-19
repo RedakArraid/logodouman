@@ -11,7 +11,7 @@ import {
   HomeIcon,
   NewspaperIcon,
   EnvelopeIcon,
-  StorefrontIcon
+  BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
 
 export default function PublicHeader() {
@@ -77,7 +77,7 @@ export default function PublicHeader() {
               href="/vendeur"
               className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-orange-600 text-sm font-medium transition-colors"
             >
-              <StorefrontIcon className="w-5 h-5" />
+              <BuildingStorefrontIcon className="w-5 h-5" />
               Devenir vendeur
             </Link>
             <button

@@ -16,14 +16,12 @@ interface Category {
 }
 
 interface ProductFiltersAmazonProps {
-  // Données
   categories: Category[];
   availableColors: string[];
   availableMaterials: string[];
+  availableBrands?: string[];
   priceStats: { min: number; max: number };
   allProducts: any[];
-  
-  // États
   selectedCategory: string;
   setSelectedCategory: (id: string) => void;
   minPrice: number;
@@ -34,11 +32,13 @@ interface ProductFiltersAmazonProps {
   setSelectedColors: (colors: string[]) => void;
   selectedMaterials: string[];
   setSelectedMaterials: (materials: string[]) => void;
+  selectedBrands?: string[];
+  setSelectedBrands?: (brands: string[]) => void;
+  inStockOnly?: boolean;
+  setInStockOnly?: (v: boolean) => void;
   availableSellers?: { id: string; storeName: string; slug: string }[];
   selectedSellerId?: string;
   setSelectedSellerId?: (id: string) => void;
-  
-  // Actions
   onReset: () => void;
   activeFiltersCount: number;
   productsCount: number;
@@ -60,6 +60,11 @@ export default function ProductFiltersAmazon({
   setSelectedColors,
   selectedMaterials,
   setSelectedMaterials,
+  availableBrands = [],
+  selectedBrands = [],
+  setSelectedBrands,
+  inStockOnly = false,
+  setInStockOnly,
   availableSellers = [],
   selectedSellerId = 'all',
   setSelectedSellerId,
@@ -69,7 +74,7 @@ export default function ProductFiltersAmazon({
 }: ProductFiltersAmazonProps) {
 
   const [expandedSections, setExpandedSections] = useState<string[]>(
-    availableSellers.length > 0 ? ['categories', 'price', 'sellers'] : ['categories', 'price']
+    ['categories', 'price', 'availability']
   );
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
@@ -226,29 +231,35 @@ export default function ProductFiltersAmazon({
         
         {expandedSections.includes('price') && (
           <div className="pb-3 space-y-3">
-            {/* Fourchettes de prix prédéfinies */}
+            {/* Fourchettes de prix dynamiques (basées sur les vrais prix) */}
             <div className="space-y-1">
-              {[
-                { min: 0, max: 25000 },
-                { min: 25000, max: 50000 },
-                { min: 50000, max: 100000 },
-                { min: 100000, max: priceStats.max }
-              ].map((range, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setMinPrice(range.min);
-                    setMaxPrice(range.max);
-                  }}
-                  className={`block w-full text-left px-2 py-1.5 text-sm transition-colors ${
-                    minPrice === range.min && maxPrice === range.max
-                      ? 'text-orange-600 font-semibold'
-                      : 'text-gray-700 hover:text-orange-600'
-                  }`}
-                >
-                  {Math.round(range.min / 100).toLocaleString()} - {Math.round(range.max / 100).toLocaleString()} F
-                </button>
-              ))}
+              {(() => {
+                const { min, max } = priceStats;
+                if (min >= max) return null;
+                const step = Math.ceil((max - min) / 4);
+                const ranges = [
+                  { min, max: min + step },
+                  { min: min + step, max: min + step * 2 },
+                  { min: min + step * 2, max: min + step * 3 },
+                  { min: min + step * 3, max }
+                ];
+                return ranges.map((range, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setMinPrice(range.min);
+                      setMaxPrice(range.max);
+                    }}
+                    className={`block w-full text-left px-2 py-1.5 text-sm transition-colors ${
+                      minPrice === range.min && maxPrice === range.max
+                        ? 'text-orange-600 font-semibold'
+                        : 'text-gray-700 hover:text-orange-600'
+                    }`}
+                  >
+                    {Math.round(range.min / 100).toLocaleString()} - {Math.round(range.max / 100).toLocaleString()} FCFA
+                  </button>
+                ));
+              })()}
             </div>
             
             {/* Inputs personnalisés */}
@@ -269,12 +280,6 @@ export default function ProductFiltersAmazon({
                   placeholder="Max"
                   className="w-20 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
                 />
-                <button
-                  onClick={() => {}}
-                  className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium transition-colors"
-                >
-                  OK
-                </button>
               </div>
             </div>
           </div>
@@ -308,6 +313,76 @@ export default function ProductFiltersAmazon({
                   />
                   <span className={`ml-2 text-sm ${selectedColors.includes(color) ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
                     {color}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Section Disponibilité */}
+      {setInStockOnly && (
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection('availability')}
+            className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="font-bold text-sm text-gray-900 uppercase">Disponibilité</span>
+            {expandedSections.includes('availability') ? (
+              <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          {expandedSections.includes('availability') && (
+            <div className="pb-3">
+              <label className="flex items-center px-2 py-1.5 hover:bg-gray-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">En stock uniquement</span>
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Section Marques */}
+      {availableBrands.length > 0 && setSelectedBrands && (
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection('brands')}
+            className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="font-bold text-sm text-gray-900 uppercase">Marque</span>
+            {expandedSections.includes('brands') ? (
+              <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          {expandedSections.includes('brands') && (
+            <div className="pb-3 space-y-1">
+              {availableBrands.map(brand => (
+                <label key={brand} className="flex items-center px-2 py-1.5 hover:bg-gray-50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedBrands.includes(brand)}
+                    onChange={() => {
+                      setSelectedBrands(
+                        selectedBrands.includes(brand)
+                          ? selectedBrands.filter(b => b !== brand)
+                          : [...selectedBrands, brand]
+                      );
+                    }}
+                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                  />
+                  <span className={`ml-2 text-sm ${selectedBrands.includes(brand) ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                    {brand}
                   </span>
                 </label>
               ))}
@@ -354,6 +429,17 @@ export default function ProductFiltersAmazon({
   );
 }
 
+// Récupère tous les IDs de catégories (cat + sous-catégories récursivement)
+function getCategoryIdsRecursive(cat: Category): string[] {
+  const ids = [cat.id];
+  if (cat.subcategories?.length) {
+    for (const sub of cat.subcategories) {
+      ids.push(...getCategoryIdsRecursive(sub));
+    }
+  }
+  return ids;
+}
+
 // Composant récursif pour afficher les catégories et sous-catégories
 function CategoryNode({ 
   category, 
@@ -370,19 +456,23 @@ function CategoryNode({
   selected: boolean;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
-  allProducts: any[];
+  allProducts: { categoryId: string; status?: string }[];
 }) {
   const hasSubcategories = category.subcategories && category.subcategories.length > 0;
-  const productCount = allProducts.filter(p => p.categoryId === category.id && p.status === 'active').length;
+  const categoryIds = getCategoryIdsRecursive(category);
+  const productCount = allProducts.filter(p => categoryIds.includes(p.categoryId) && (p.status ?? 'active') !== 'inactive').length;
 
   return (
     <div>
       <div 
         className={`flex items-center py-1.5 hover:bg-gray-50 cursor-pointer transition-colors ${level > 0 ? 'pl-4' : 'px-2'}`}
-        onClick={() => hasSubcategories ? onToggle(category.id) : onSelect(category.id)}
+        onClick={() => onSelect(category.id)}
       >
         {hasSubcategories && (
-          <span className="mr-1">
+          <span 
+            className="mr-1 shrink-0"
+            onClick={(e) => { e.stopPropagation(); onToggle(category.id); }}
+          >
             {expanded ? (
               <ChevronDownIcon className="w-3 h-3 text-gray-600" />
             ) : (

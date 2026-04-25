@@ -34,10 +34,13 @@ export default function AdminLogin() {
         // Sauvegarder le token et les infos utilisateur
         localStorage.setItem('admin_token', data.token);
         localStorage.setItem('admin_user', JSON.stringify(data.user));
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
         
-        // Vendeur approuvé → dashboard vendeur, sinon admin
+        // Redirection selon le rôle
         if (data.user?.role === 'seller') {
           router.push('/vendeur/dashboard');
+        } else if (data.user?.role === 'user') {
+          router.push('/mon-compte');
         } else {
           router.push('/admin/dashboard');
         }

@@ -300,9 +300,10 @@ export class ProductService {
 }
 
 export class CategoryService {
-  static async getAll() {
+  static async getAll(params?: { hierarchy?: boolean }) {
     try {
-      const response = await apiService.get('/api/categories');
+      const query = params?.hierarchy ? '?hierarchy=true' : '';
+      const response = await apiService.get(`/api/categories${query}`);
       return response.categories || response || [];
     } catch (error) {
       console.error('Erreur lors du chargement des catégories:', error);
@@ -452,12 +453,43 @@ export class AuthService {
       const response = await apiService.post('/api/auth/login', { email, password });
       if (response.token) {
         apiService.setAuthToken(response.token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_user', JSON.stringify(response.user || {}));
+        }
       }
       return response;
     } catch (error) {
       console.error('Erreur lors de la connexion:', error);
       throw error;
     }
+  }
+
+  static async signup(data: { email: string; password: string; name?: string }) {
+    try {
+      const response = await apiService.post('/api/auth/signup', data);
+      if (response.token) {
+        apiService.setAuthToken(response.token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_user', JSON.stringify(response.user || {}));
+        }
+      }
+      return response;
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      throw error;
+    }
+  }
+
+  static getUser() {
+    if (typeof window !== 'undefined') {
+      try {
+        const u = localStorage.getItem('auth_user');
+        if (u) return JSON.parse(u);
+        const a = localStorage.getItem('admin_user');
+        if (a) return JSON.parse(a);
+      } catch {}
+    }
+    return null;
   }
 
   static async verify() {
@@ -489,6 +521,10 @@ export class AuthService {
       console.error('Erreur lors de la déconnexion:', error);
     } finally {
       apiService.removeAuthToken();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('admin_user');
+      }
     }
   }
 

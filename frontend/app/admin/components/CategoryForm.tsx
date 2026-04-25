@@ -68,7 +68,7 @@ export default function CategoryForm({ category, categories, onSubmit, onCancel 
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Ex: Sacs à main"
+              placeholder="Ex: Sacs, Alimentation, Électronique"
               required
             />
           </div>
@@ -82,7 +82,7 @@ export default function CategoryForm({ category, categories, onSubmit, onCancel 
               value={formData.slug}
               onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50"
-              placeholder="Ex: sacs-a-main"
+              placeholder="Ex: alimentation, electronique"
               required
             />
             <p className="text-xs text-gray-500 mt-1">

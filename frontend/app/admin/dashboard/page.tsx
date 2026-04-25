@@ -15,6 +15,7 @@ import {
   BanknotesIcon
 } from '@heroicons/react/24/outline';
 import AuthGuard from '../components/AuthGuard';
+import DashboardLayout from '../../components/DashboardLayout';
 import ProductsManager from '../components/ProductsManager';
 import CategoriesManager from '../components/CategoriesManager';
 import OrdersManager from '../components/OrdersManager';
@@ -232,121 +233,25 @@ export default function AdminDashboard() {
     return null;
   }
 
-  // Interface principale
+  const adminNavItems = [
+    { id: 'dashboard', label: 'Dashboard Analytics', icon: ChartBarIcon, onClick: () => setActiveSection('dashboard'), active: activeSection === 'dashboard' },
+    { id: 'products', label: 'Produits', icon: ShoppingBagIcon, onClick: () => setActiveSection('products'), active: activeSection === 'products' },
+    { id: 'categories', label: 'Catégories', icon: TagIcon, onClick: () => setActiveSection('categories'), active: activeSection === 'categories' },
+    { id: 'orders', label: 'Commandes', icon: CogIcon, onClick: () => setActiveSection('orders'), active: activeSection === 'orders' },
+    { id: 'customers', label: 'Clients', icon: UsersIcon, onClick: () => setActiveSection('customers'), active: activeSection === 'customers' },
+    { id: 'vendeurs', label: 'Vendeurs', icon: BuildingStorefrontIcon, onClick: () => setActiveSection('vendeurs'), active: activeSection === 'vendeurs', show: user?.role === 'admin' || user?.role === 'manager' },
+    { id: 'payouts', label: 'Versements', icon: BanknotesIcon, onClick: () => setActiveSection('payouts'), active: activeSection === 'payouts', show: user?.role === 'admin' || user?.role === 'manager' },
+  ];
+
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-orange-50">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-orange-200 flex flex-col justify-between shadow-lg">
-          <div>
-            <div className="p-6 border-b border-orange-200">
-              <h1 className="text-2xl font-bold text-gray-900">LogoDouman</h1>
-              <p className="text-orange-600 font-medium">Analytics Dashboard</p>
-              <p className="text-sm text-gray-500 mt-1">Connecté: {user.email}</p>
-            </div>
-            
-            <nav className="flex flex-col gap-2 p-4">
-              <button
-                onClick={() => setActiveSection('dashboard')}
-                className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'dashboard' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                <ChartBarIcon className="w-5 h-5" />
-                Dashboard Analytics
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('products')}
-                className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'products' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                <ShoppingBagIcon className="w-5 h-5" />
-                Produits
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('categories')}
-                className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'categories' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                <TagIcon className="w-5 h-5" />
-                Catégories
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('orders')}
-                className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'orders' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                <CogIcon className="w-5 h-5" />
-                Commandes
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('customers')}
-                className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  activeSection === 'customers' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                <UsersIcon className="w-5 h-5" />
-                Clients
-              </button>
-              
-              {(user?.role === 'admin' || user?.role === 'manager') && (
-                <>
-                  <button
-                    onClick={() => setActiveSection('vendeurs')}
-                    className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                      activeSection === 'vendeurs' 
-                        ? 'bg-orange-600 text-white' 
-                        : 'text-gray-700 hover:bg-orange-50'
-                    }`}
-                  >
-                    <BuildingStorefrontIcon className="w-5 h-5" />
-                    Vendeurs
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('payouts')}
-                    className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                      activeSection === 'payouts' 
-                        ? 'bg-orange-600 text-white' 
-                        : 'text-gray-700 hover:bg-orange-50'
-                    }`}
-                  >
-                    <BanknotesIcon className="w-5 h-5" />
-                    Versements
-                  </button>
-                </>
-              )}
-            </nav>
-          </div>
-          
-          <div className="p-4 border-t border-orange-200">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-orange-100 text-orange-800 px-4 py-2 rounded-lg hover:bg-orange-200 transition-colors"
-            >
-              Se déconnecter
-            </button>
-          </div>
-        </aside>
-
-        {/* Contenu principal */}
-        <main className="flex-1 p-8">
+      <DashboardLayout
+        title="Admin"
+        subtitle="Administration & Analytics"
+        user={user}
+        navItems={adminNavItems}
+        onLogout={handleLogout}
+      >
           {activeSection === 'dashboard' && (
             <DashboardAnalytics 
               stats={stats} 
@@ -398,8 +303,7 @@ export default function AdminDashboard() {
               <PayoutsManager />
             </div>
           )}
-        </main>
-      </div>
+      </DashboardLayout>
     </AuthGuard>
   );
 }

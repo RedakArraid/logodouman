@@ -53,7 +53,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // États du formulaire
+  // États du formulaire (produits polyvalents : sacs, alimentation, etc.)
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
@@ -67,7 +67,10 @@ export default function ProductsManager({ categories, onProductChange }: Product
     weight: 0,
     colors: [] as string[],
     features: [] as string[],
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    productType: 'article' as string,
+    unit: 'piece' as string,
+    expiryDate: ''
   });
 
   // Charger les produits
@@ -102,7 +105,10 @@ export default function ProductsManager({ categories, onProductChange }: Product
       weight: 0,
       colors: [],
       features: [],
-      status: 'active'
+      status: 'active',
+      productType: 'article',
+      unit: 'piece',
+      expiryDate: ''
     });
     setEditingProduct(null);
   };
@@ -114,11 +120,11 @@ export default function ProductsManager({ categories, onProductChange }: Product
   };
 
   // Ouvrir le modal pour éditer
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: Product & { productType?: string; unit?: string; expiryDate?: string }) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      price: product.price / 100, // Convertir centimes en FCFA
+      price: product.price / 100,
       categoryId: product.categoryId,
       description: product.description,
       stock: product.stock,
@@ -129,7 +135,10 @@ export default function ProductsManager({ categories, onProductChange }: Product
       weight: product.weight || 0,
       colors: product.colors || [],
       features: product.features || [],
-      status: product.status
+      status: product.status,
+      productType: product.productType || 'article',
+      unit: product.unit || 'piece',
+      expiryDate: product.expiryDate ? new Date(product.expiryDate).toISOString().split('T')[0] : ''
     });
     setShowModal(true);
   };
@@ -140,10 +149,12 @@ export default function ProductsManager({ categories, onProductChange }: Product
     setLoading(true);
 
     try {
-      const productData = {
+      const productData: Record<string, unknown> = {
         ...formData,
-        price: Math.round(formData.price * 100), // Convertir en centimes
+        price: Math.round(formData.price * 100),
       };
+      if (formData.expiryDate) productData.expiryDate = new Date(formData.expiryDate).toISOString();
+      else delete productData.expiryDate;
 
       if (editingProduct) {
         await ProductService.update(editingProduct.id, productData);
@@ -307,7 +318,7 @@ export default function ProductsManager({ categories, onProductChange }: Product
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {(product.price / 100).toFixed(0)} FCFA
+                    {(product.price / 100).toFixed(0)} F / {(product as any).unit || 'piece'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`text-sm font-medium ${product.stock <= 10 ? 'text-red-600' : 'text-gray-900'}`}>
@@ -436,6 +447,55 @@ export default function ProductsManager({ categories, onProductChange }: Product
                       ))}
                     </select>
                   </div>
+
+                  {/* Type de produit */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                    <select
+                      value={formData.productType}
+                      onChange={(e) => setFormData({...formData, productType: e.target.value})}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="article">Article général</option>
+                      <option value="sac">Sac / Accessoire</option>
+                      <option value="alimentation">Alimentation</option>
+                      <option value="electronique">Électronique</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                  </div>
+
+                  {/* Unité */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Unité</label>
+                    <select
+                      value={formData.unit}
+                      onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="piece">Pièce</option>
+                      <option value="kg">Kg</option>
+                      <option value="g">Grammes</option>
+                      <option value="litre">Litre</option>
+                      <option value="ml">ml</option>
+                      <option value="sachet">Sachet</option>
+                      <option value="boite">Boîte</option>
+                      <option value="pack">Pack</option>
+                      <option value="lot">Lot</option>
+                    </select>
+                  </div>
+
+                  {formData.productType === 'alimentation' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Date limite (DLC)</label>
+                      <input
+                        type="date"
+                        value={formData.expiryDate}
+                        onChange={(e) => setFormData({...formData, expiryDate: e.target.value})}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                  )}
 
                   {/* Stock */}
                   <div>

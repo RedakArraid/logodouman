@@ -60,8 +60,15 @@ export interface Product {
   stock: number;
   status: 'active' | 'inactive';
   
+  // Type et unité (produits polyvalents : sacs, alimentation, etc.)
+  productType?: string;
+  unit?: string;
+  expiryDate?: string;
+  attributes?: Record<string, unknown>;
+
   // Attributs métier spécialisés
   sku?: string;
+  brand?: string;
   material?: string;
   lining?: string;
   coating?: string;

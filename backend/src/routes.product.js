@@ -6,7 +6,7 @@ const db = new prisma();
 const { requireAuth, requireAdmin, requireRole, requireSeller } = require('./middleware.auth');
 const { uploadSingle, deleteImage, extractPublicId, getResponsiveUrls } = require('./services/cloudinary.service');
 
-// Zod schema for product validation
+// Zod schema for product validation (produits polyvalents : sacs, alimentation, etc.)
 const productSchema = z.object({
   name: z.string().min(1),
   price: z.number().int().nonnegative(),
@@ -16,6 +16,11 @@ const productSchema = z.object({
   stock: z.number().int().nonnegative().optional(),
   status: z.enum(['active', 'inactive']).optional(),
   sku: z.string().optional(),
+  brand: z.string().optional().nullable(),
+  productType: z.enum(['article', 'sac', 'alimentation', 'electronique', 'autre']).optional(),
+  unit: z.string().optional(),
+  expiryDate: z.union([z.string(), z.date()]).optional().nullable(),
+  attributes: z.record(z.any()).optional().nullable(),
   material: z.string().optional(),
   lining: z.string().optional(),
   coating: z.string().optional(),
@@ -160,6 +165,15 @@ async function requireProductWrite(req, res, next) {
   return res.status(403).json({ error: 'Droits insuffisants pour gérer les produits.' });
 }
 
+// Helper: préparer les données produit (expiryDate, attributes, etc.)
+function prepareProductData(data) {
+  const prepared = { ...data };
+  if (prepared.expiryDate) {
+    prepared.expiryDate = new Date(prepared.expiryDate);
+  }
+  return prepared;
+}
+
 // POST create product (admin ou vendeur)
 router.post('/', requireAuth, requireProductWrite, async (req, res) => {
   try {
@@ -173,9 +187,10 @@ router.post('/', requireAuth, requireProductWrite, async (req, res) => {
 
     // Admin: sellerId null. Vendeur: sellerId de req.seller
     const sellerId = req.seller ? req.seller.id : null;
+    const prepared = prepareProductData({ ...data, sellerId });
     
     const product = await db.product.create({ 
-      data: { ...data, sellerId },
+      data: prepared,
       include: {
         category: {
           select: {
@@ -246,9 +261,10 @@ router.put('/:id', requireAuth, requireProductWrite, async (req, res) => {
       }
     }
     
-    const product = await db.product.update({ 
-      where: { id }, 
-      data,
+    const prepared = prepareProductData(data);
+    const product = await db.product.update({
+      where: { id },
+      data: prepared,
       include: {
         category: {
           select: {

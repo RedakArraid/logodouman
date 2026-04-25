@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useStore } from '../contexts/StoreContext';
+import { useCart } from '../contexts/CartContext';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
 import ProductFiltersAmazon from '../components/ProductFiltersAmazon';
@@ -17,16 +19,16 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
-// 🔧 FIX: Utilitaire pour normaliser les chaînes (accents, casse)
 const normalizeString = (str: string): string => {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
-export default function BoutiquePage() {
+function BoutiqueContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { getActiveProducts, getActiveCategories, isHydrated } = useStore();
+  const { addItem } = useCart();
   
   // États des filtres
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -40,11 +42,79 @@ export default function BoutiquePage() {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedSellerId, setSelectedSellerId] = useState<string>('all');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   const products = isHydrated ? getActiveProducts() : [];
   const categories = isHydrated ? getActiveCategories() : [];
   
-  // 🔧 FIX: Ref pour savoir si c'est le premier chargement
+  // Ref pour éviter que la lecture URL ne réapplique un filtre qu'on vient de retirer (race condition)
+  const justSyncedFromStateRef = useRef(false);
+
+  // Lire les filtres depuis l'URL au chargement uniquement (ou navigation externe: partage, back/forward)
+  useEffect(() => {
+    if (categories.length === 0) return;
+    if (justSyncedFromStateRef.current) {
+      justSyncedFromStateRef.current = false;
+      return; // Ne pas écraser l'état qu'on vient de synchroniser nous-mêmes
+    }
+    const slug = searchParams?.get('category');
+    if (slug) {
+      const cat = categories.find((c: { slug: string }) => c.slug === slug);
+      if (cat) setSelectedCategory(cat.id);
+    } else {
+      setSelectedCategory('all');
+    }
+    const q = searchParams?.get('q') ?? '';
+    setSearchQuery(q);
+    setDebouncedSearchQuery(q);
+    const brandsParam = searchParams?.get('brand');
+    setSelectedBrands(brandsParam ? brandsParam.split(',').filter(Boolean) : []);
+    setInStockOnly(searchParams?.get('stock') === '1');
+    const min = searchParams?.get('min');
+    const max = searchParams?.get('max');
+    const minVal = min ? Number(min) : NaN;
+    const maxVal = max ? Number(max) : NaN;
+    if (!isNaN(minVal)) setMinPrice(minVal);
+    if (!isNaN(maxVal)) setMaxPrice(maxVal);
+  }, [searchParams, categories]);
+
+  // Synchroniser les filtres avec l'URL (pour partage et SEO) - après le premier cycle
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const params = new URLSearchParams();
+    if (selectedCategory !== 'all') {
+      const cat = categories.find((c: { id: string }) => c.id === selectedCategory);
+      if (cat?.slug) params.set('category', cat.slug);
+    }
+    if (debouncedSearchQuery) params.set('q', debouncedSearchQuery);
+    if (selectedBrands.length > 0) params.set('brand', selectedBrands.join(','));
+    if (inStockOnly) params.set('stock', '1');
+    if (minPrice > 0 || maxPrice < 20000000) {
+      if (minPrice > 0) params.set('min', String(minPrice));
+      if (maxPrice < 20000000) params.set('max', String(maxPrice));
+    }
+    const qs = params.toString();
+    const base = pathname ?? '/boutique';
+    const newUrl: string = qs ? `${base}?${qs}` : base;
+    if (window.location.pathname + (window.location.search || '') !== newUrl) {
+      justSyncedFromStateRef.current = true;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [isHydrated, selectedCategory, debouncedSearchQuery, selectedBrands, inStockOnly, minPrice, maxPrice, categories, pathname, router]);
+
+  // Résoudre les IDs de catégories pour le filtre (département = tous les enfants)
+  const getCategoryIdsForFilter = useCallback((catId: string) => {
+    const children = categories.filter((c: any) => c.parentId === catId);
+    if (children.length > 0) return children.map((c: any) => c.id);
+    return [catId];
+  }, [categories]);
+
   const isFirstLoad = useRef(true);
 
   // 🔧 FIX: Prix min/max avec mémoïsation stable
@@ -82,6 +152,22 @@ export default function BoutiquePage() {
     return Array.from(materials).sort();
   }, [products]);
 
+  const categoriesTree = useMemo(() => {
+    const roots = categories.filter((c: any) => !c.parentId && c.status !== 'inactive');
+    return roots.map((r: any) => ({
+      ...r,
+      subcategories: categories.filter((c: any) => c.parentId === r.id && c.status !== 'inactive')
+    }));
+  }, [categories]);
+
+  const availableBrands = useMemo(() => {
+    const brands = new Set<string>();
+    products.forEach(p => {
+      if (p.brand && typeof p.brand === 'string') brands.add(p.brand);
+    });
+    return Array.from(brands).sort();
+  }, [products]);
+
   const availableSellers = useMemo(() => {
     const seen = new Map<string, { id: string; storeName: string; slug: string }>();
     products.forEach(p => {
@@ -101,14 +187,17 @@ export default function BoutiquePage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 🔧 FIX: Initialiser les prix SEULEMENT au premier chargement
+  // 🔧 FIX: Initialiser les prix SEULEMENT au premier chargement (sauf si déjà dans l'URL)
   useEffect(() => {
     if (isHydrated && products.length > 0 && isFirstLoad.current) {
-      setMinPrice(priceStats.min);
-      setMaxPrice(priceStats.max);
+      const fromUrl = searchParams?.get('min') ?? searchParams?.get('max');
+      if (!fromUrl) {
+        setMinPrice(priceStats.min);
+        setMaxPrice(priceStats.max);
+      }
       isFirstLoad.current = false;
     }
-  }, [isHydrated, products.length]); // Ne dépend PAS de priceStats pour éviter la boucle
+  }, [isHydrated, products.length, searchParams, priceStats.min, priceStats.max]);
 
   // 🔧 FIX: Filtrage optimisé avec normalisation et null-safe
   const filteredProducts = useMemo(() => {
@@ -117,9 +206,11 @@ export default function BoutiquePage() {
     // Normaliser la recherche une seule fois
     const normalizedSearch = normalizeString(debouncedSearchQuery);
 
+    const categoryIds = selectedCategory === 'all' ? [] : getCategoryIdsForFilter(selectedCategory);
+
     const filtered = products.filter(product => {
-      // Filtre catégorie
-      const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
+      // Filtre catégorie (supporte hiérarchie : département = tous les enfants)
+      const categoryMatch = selectedCategory === 'all' || (categoryIds.length > 0 && categoryIds.includes(product.categoryId));
       
       // Filtre prix
       const priceMatch = product.price >= minPrice && product.price <= maxPrice;
@@ -139,8 +230,14 @@ export default function BoutiquePage() {
 
       // Filtre vendeur
       const sellerMatch = selectedSellerId === 'all' || product.sellerId === selectedSellerId;
+
+      // Filtre marque
+      const brandMatch = selectedBrands.length === 0 || (product.brand && selectedBrands.includes(product.brand));
+
+      // Filtre disponibilité
+      const stockMatch = !inStockOnly || (product.stock || 0) > 0;
       
-      return categoryMatch && priceMatch && searchMatch && colorMatch && materialMatch && sellerMatch;
+      return categoryMatch && priceMatch && searchMatch && colorMatch && materialMatch && sellerMatch && brandMatch && stockMatch;
     });
 
     // 🔧 FIX: Tri sans mutation (slice pour créer une copie)
@@ -159,7 +256,7 @@ export default function BoutiquePage() {
       default:
         return sorted;
     }
-  }, [isHydrated, products, selectedCategory, minPrice, maxPrice, debouncedSearchQuery, sortBy, selectedColors, selectedMaterials, selectedSellerId]);
+  }, [isHydrated, products, selectedCategory, minPrice, maxPrice, debouncedSearchQuery, sortBy, selectedColors, selectedMaterials, selectedSellerId, selectedBrands, inStockOnly, getCategoryIdsForFilter]);
 
   // 🔧 FIX: Reset avec les vraies valeurs de priceStats
   const resetFilters = useCallback(() => {
@@ -172,12 +269,16 @@ export default function BoutiquePage() {
     setSelectedColors([]);
     setSelectedMaterials([]);
     setSelectedSellerId('all');
+    setSelectedBrands([]);
+    setInStockOnly(false);
   }, [priceStats.min, priceStats.max]);
 
   // 🔧 FIX: Compteur de filtres actifs avec tolérance pour les prix
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedCategory !== 'all') count++;
+    if (selectedBrands.length > 0) count += selectedBrands.length;
+    if (inStockOnly) count++;
     
     // Tolérance de 100 centimes (1 FCFA) pour les comparaisons de prix
     const priceTolerance = 100;
@@ -191,7 +292,7 @@ export default function BoutiquePage() {
     if (selectedMaterials.length > 0) count += selectedMaterials.length;
     if (selectedSellerId !== 'all') count++;
     return count;
-  }, [selectedCategory, minPrice, maxPrice, debouncedSearchQuery, selectedColors, selectedMaterials, selectedSellerId, priceStats.min, priceStats.max]);
+  }, [selectedCategory, minPrice, maxPrice, debouncedSearchQuery, selectedColors, selectedMaterials, selectedSellerId, selectedBrands, inStockOnly, priceStats.min, priceStats.max]);
 
   if (!isHydrated) {
     return (
@@ -222,10 +323,10 @@ export default function BoutiquePage() {
               Découvrez Notre Collection
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-              Sacs à main de qualité premium - Élégance et style pour chaque occasion
+              Sacs, alimentation, électronique et plus - produits de qualité à prix justes
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {categories.map(category => (
+              {categories.filter((c: any) => !c.parentId).map((category: any) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
@@ -357,6 +458,25 @@ export default function BoutiquePage() {
                     <XMarkIcon className="w-4 h-4" />
                   </button>
                 ))}
+                {selectedBrands.map(brand => (
+                  <button
+                    key={brand}
+                    onClick={() => setSelectedBrands(prev => prev.filter(b => b !== brand))}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold hover:bg-amber-200 transition-colors"
+                  >
+                    {brand}
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                ))}
+                {inStockOnly && (
+                  <button
+                    onClick={() => setInStockOnly(false)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm font-semibold hover:bg-green-200 transition-colors"
+                  >
+                    En stock
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
                 <button
                   onClick={resetFilters}
                   className="ml-auto text-sm text-gray-600 hover:text-gray-900 font-semibold underline"
@@ -374,9 +494,10 @@ export default function BoutiquePage() {
           <aside className="hidden lg:block lg:w-80">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-gray-100">
               <ProductFiltersAmazon
-                categories={categories}
+                categories={categoriesTree}
                 availableColors={availableColors}
                 availableMaterials={availableMaterials}
+                availableBrands={availableBrands}
                 priceStats={priceStats}
                 allProducts={products}
                 selectedCategory={selectedCategory}
@@ -389,6 +510,10 @@ export default function BoutiquePage() {
                 setSelectedColors={setSelectedColors}
                 selectedMaterials={selectedMaterials}
                 setSelectedMaterials={setSelectedMaterials}
+                selectedBrands={selectedBrands}
+                setSelectedBrands={setSelectedBrands}
+                inStockOnly={inStockOnly}
+                setInStockOnly={setInStockOnly}
                 availableSellers={availableSellers}
                 selectedSellerId={selectedSellerId}
                 setSelectedSellerId={setSelectedSellerId}
@@ -447,6 +572,7 @@ export default function BoutiquePage() {
                             <img
                               src={product.image || `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop`}
                               alt={product.name}
+                              loading="lazy"
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop`; }}
                             />
@@ -456,6 +582,11 @@ export default function BoutiquePage() {
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  {product.brand && (
+                                    <span className="text-xs font-bold text-amber-700">
+                                      {product.brand}
+                                    </span>
+                                  )}
                                   <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                                     {category?.name}
                                   </span>
@@ -476,7 +607,10 @@ export default function BoutiquePage() {
                               </div>
                               <div className="text-right ml-4">
                                 <div className="text-3xl font-bold text-gray-900">
-                                  {Math.round(product.price / 100).toLocaleString()} F
+                                  {Math.round(product.price / 100).toLocaleString()} FCFA
+                                  {product.unit && product.unit !== 'piece' && (
+                                    <span className="text-base font-normal text-gray-500"> / {product.unit}</span>
+                                  )}
                                 </div>
                                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 ${
                                   (product.stock || 0) > 10 ? 'bg-green-100 text-green-800' :
@@ -509,7 +643,7 @@ export default function BoutiquePage() {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  // TODO: Ajouter au panier
+                                  if ((product.stock || 0) > 0) addItem(product, 1);
                                 }}
                                 className={`flex-1 py-3 px-6 rounded-xl transition-all font-bold ${
                                   (product.stock || 0) === 0 
@@ -557,6 +691,7 @@ export default function BoutiquePage() {
                         <img
                           src={product.image || `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&h=500&fit=crop`}
                           alt={product.name}
+                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&h=500&fit=crop`; }}
                         />
@@ -589,6 +724,11 @@ export default function BoutiquePage() {
                       {/* Contenu */}
                       <div className="p-5">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {product.brand && (
+                            <span className="text-xs font-bold text-amber-700">
+                              {product.brand}
+                            </span>
+                          )}
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
                             {category?.name}
                           </span>
@@ -631,7 +771,10 @@ export default function BoutiquePage() {
                         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                           <div>
                             <div className="text-2xl font-bold text-gray-900">
-                              {Math.round(product.price / 100).toLocaleString()} F
+                              {Math.round(product.price / 100).toLocaleString()} FCFA
+                              {product.unit && product.unit !== 'piece' && (
+                                <span className="text-sm font-normal text-gray-500"> / {product.unit}</span>
+                              )}
                             </div>
                             <div className="text-xs text-gray-500 font-medium">
                               Prix TTC
@@ -641,7 +784,7 @@ export default function BoutiquePage() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              // TODO: Ajouter au panier
+                              if ((product.stock || 0) > 0) addItem(product, 1);
                             }}
                             className={`p-3 rounded-xl transition-all relative z-10 ${
                               (product.stock || 0) === 0 
@@ -700,9 +843,10 @@ export default function BoutiquePage() {
               </div>
 
               <ProductFiltersAmazon
-                categories={categories}
+                categories={categoriesTree}
                 availableColors={availableColors}
                 availableMaterials={availableMaterials}
+                availableBrands={availableBrands}
                 priceStats={priceStats}
                 allProducts={products}
                 selectedCategory={selectedCategory}
@@ -715,6 +859,10 @@ export default function BoutiquePage() {
                 setSelectedColors={setSelectedColors}
                 selectedMaterials={selectedMaterials}
                 setSelectedMaterials={setSelectedMaterials}
+                selectedBrands={selectedBrands}
+                setSelectedBrands={setSelectedBrands}
+                inStockOnly={inStockOnly}
+                setInStockOnly={setInStockOnly}
                 availableSellers={availableSellers}
                 selectedSellerId={selectedSellerId}
                 setSelectedSellerId={setSelectedSellerId}
@@ -736,5 +884,17 @@ export default function BoutiquePage() {
 
       <PublicFooter />
     </div>
+  );
+}
+
+export default function BoutiquePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600" />
+      </div>
+    }>
+      <BoutiqueContent />
+    </Suspense>
   );
 }

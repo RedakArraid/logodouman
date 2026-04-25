@@ -5,8 +5,8 @@ import { CartProvider } from './contexts/CartContext'
 
 export const metadata: Metadata = {
   title: 'LogoDouman - Plateforme E-commerce de Nouvelle Génération',
-  description: 'Découvrez notre sélection de produits de qualité : mode, sacs, électronique et décoration. Shopping en ligne simple et sécurisé.',
-  keywords: 'e-commerce, shopping, mode, sacs, électronique, décoration, LogoDouman',
+  description: 'Découvrez notre marketplace : sacs, alimentation, électronique, mode et plus. Produits de qualité à prix justes. Shopping en ligne simple et sécurisé.',
+  keywords: 'e-commerce, marketplace, sacs, alimentation, électronique, mode, LogoDouman, Côte d\'Ivoire',
   authors: [{ name: 'LogoDouman Team' }],
 }
 

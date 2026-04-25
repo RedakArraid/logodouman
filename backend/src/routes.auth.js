@@ -120,7 +120,7 @@ router.post('/signup', async (req, res) => {
         email, 
         password: hash, 
         name,
-        role: 'admin' // Par défaut, tous les utilisateurs créés sont admins
+        role: 'user' // Client / acheteur
       }
     });
 

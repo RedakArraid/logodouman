@@ -11,7 +11,7 @@ import { SellerService } from '../../config/api';
 
 export default function VendeurProfilPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = (params?.slug as string) ?? '';
   const [seller, setSeller] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

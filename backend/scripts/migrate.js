@@ -19,6 +19,8 @@ async function main() {
     await db.customer.deleteMany();
     await db.product.deleteMany();
     await db.category.deleteMany();
+    await db.sellerPayout.deleteMany();
+    await db.seller.deleteMany();
     await db.user.deleteMany();
 
     // 2. Créer un utilisateur admin
@@ -34,158 +36,231 @@ async function main() {
     });
     console.log('✅ Admin créé:', admin.email);
 
-    // 3. Créer les catégories
-    console.log('🏷️ Création des catégories...');
-    const categories = await Promise.all([
-      db.category.create({
-        data: {
-          id: 'luxury-cat-001',
-          name: 'Luxe',
-          slug: 'luxe',
-          description: 'Sacs haut de gamme en cuir premium et finitions dorées',
-          status: 'active',
-          displayOrder: 0
-        }
-      }),
-      db.category.create({
-        data: {
-          id: 'vintage-cat-002',
-          name: 'Vintage',
-          slug: 'vintage',
-          description: 'Designs rétro et motifs géométriques tendance',
-          status: 'active',
-          displayOrder: 1
-        }
-      }),
-      db.category.create({
-        data: {
-          id: 'business-cat-003',
-          name: 'Business',
-          slug: 'business',
-          description: 'Sacs professionnels et fonctionnels pour le travail',
-          status: 'active',
-          displayOrder: 2
-        }
-      }),
-      db.category.create({
-        data: {
-          id: 'casual-cat-005',
-          name: 'Casual',
-          slug: 'casual',
-          description: 'Sacs pratiques et confortables pour tous les jours',
-          status: 'active',
-          displayOrder: 3
-        }
-      })
-    ]);
-    console.log('✅ Catégories créées:', categories.length);
+    // 2b. Créer le vendeur de test
+    console.log('👤 Création du vendeur vendeur1...');
+    const vendeurPassword = await bcrypt.hash('admin123', 12);
+    const vendeurUser = await db.user.create({
+      data: {
+        email: 'vendeur1@logodouman.com',
+        password: vendeurPassword,
+        name: 'Vendeur Test',
+        role: 'seller'
+      }
+    });
+    const vendeur = await db.seller.create({
+      data: {
+        userId: vendeurUser.id,
+        storeName: 'Boutique Vendeur 1',
+        slug: 'boutique-vendeur-1',
+        description: 'Boutique de démonstration avec produits variés',
+        status: 'approved',
+        commissionRate: 10
+      }
+    });
+    console.log('✅ Vendeur créé:', vendeurUser.email, '(' + vendeur.storeName + ')');
 
-    // 4. Créer les produits
+    // 3. Créer les catégories (structure Amazon : Départements > Catégories > Sous-catégories)
+    console.log('🏷️ Création des catégories (structure Amazon)...');
+
+    // 3a. Départements (parents)
+    const deptSacs = await db.category.create({
+      data: {
+        id: 'dept-sacs',
+        name: 'Sacs & Accessoires',
+        slug: 'sacs-accessoires',
+        description: 'Sacs à main, sacs à dos, portefeuilles et accessoires',
+        status: 'active',
+        displayOrder: 0,
+        parentId: null
+      }
+    });
+    const deptAlim = await db.category.create({
+      data: {
+        id: 'dept-alimentation',
+        name: 'Alimentation',
+        slug: 'alimentation',
+        description: 'Chocolats, épicerie, boissons et produits locaux',
+        status: 'active',
+        displayOrder: 1,
+        parentId: null
+      }
+    });
+    const deptElec = await db.category.create({
+      data: {
+        id: 'dept-electronique',
+        name: 'Électronique',
+        slug: 'electronique',
+        description: 'Téléphones, chargeurs, écouteurs et accessoires tech',
+        status: 'active',
+        displayOrder: 2,
+        parentId: null
+      }
+    });
+    const deptMode = await db.category.create({
+      data: {
+        id: 'dept-mode',
+        name: 'Mode & Vêtements',
+        slug: 'mode',
+        description: 'Vêtements, chaussures et accessoires mode',
+        status: 'active',
+        displayOrder: 3,
+        parentId: null
+      }
+    });
+
+    // 3b. Catégories (enfants des départements)
+    const catSacsMain = await db.category.create({
+      data: { name: 'Sacs à main', slug: 'sacs-a-main', description: 'Sacs à main et clutch', status: 'active', displayOrder: 0, parentId: deptSacs.id }
+    });
+    const catSacsDos = await db.category.create({
+      data: { name: 'Sacs à dos', slug: 'sacs-a-dos', description: 'Sacs à dos et sacoches', status: 'active', displayOrder: 1, parentId: deptSacs.id }
+    });
+    const catChocolats = await db.category.create({
+      data: { name: 'Chocolats & confiseries', slug: 'chocolats-confiseries', description: 'Chocolat et sucreries', status: 'active', displayOrder: 0, parentId: deptAlim.id }
+    });
+    const catEpicerie = await db.category.create({
+      data: { name: 'Épicerie & produits de base', slug: 'epicerie', description: 'Produits alimentaires de base', status: 'active', displayOrder: 1, parentId: deptAlim.id }
+    });
+    const catAccessoiresTech = await db.category.create({
+      data: { name: 'Accessoires tech', slug: 'accessoires-tech', description: 'Chargeurs, câbles et accessoires', status: 'active', displayOrder: 0, parentId: deptElec.id }
+    });
+    const catEcouteurs = await db.category.create({
+      data: { name: 'Écouteurs & audio', slug: 'ecouteurs-audio', description: 'Écouteurs et casques', status: 'active', displayOrder: 1, parentId: deptElec.id }
+    });
+    const catVetements = await db.category.create({
+      data: { name: 'Vêtements', slug: 'vetements', description: 'Vêtements femme et homme', status: 'active', displayOrder: 0, parentId: deptMode.id }
+    });
+
+    const allCategories = [deptSacs, deptAlim, deptElec, deptMode, catSacsMain, catSacsDos, catChocolats, catEpicerie, catAccessoiresTech, catEcouteurs, catVetements];
+    console.log('✅ Catégories créées:', allCategories.length, '(4 départements + 7 catégories)');
+
+    // 4. Créer les produits (classés dans les catégories feuilles, avec marques)
     console.log('📦 Création des produits...');
+    const productDefaults = {
+      images: [],
+      styles: [],
+      features: [],
+      colors: []
+    };
     const products = [
       {
-        name: "Sac à main verni brillant avec anneau de levage",
-        price: 10000000, // 100,000 FCFA en centimes
-        categoryId: "luxury-cat-001",
+        name: "Sac à main verni brillant",
+        price: 9500000,
+        categoryId: catSacsMain.id,
+        productType: "sac",
+        unit: "piece",
+        brand: "LogoDouman",
         image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
-        description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
+        description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré",
         stock: 12,
         status: "active",
-        sku: "C05N001",
+        sku: "SAC001",
         material: "Cuir PU",
-        lining: "Polyester",
-        dimensions: "25 x 18 x 12 cm",
-        weight: 0.7,
-        shape: "Rectangle",
-        styles: ["Mode", "Luxe", "Élégant"],
-        pattern: "Solide",
-        decoration: "Anneau doré",
-        closure: "Fermeture éclair",
-        handles: "Double poignée",
-        season: "Toutes saisons",
-        occasion: "Soirée",
-        features: ["Résistant", "Élégant"],
-        colors: ["Noir", "Rouge", "Beige"],
-        gender: "Femme",
-        ageGroup: "Adulte"
+        ...productDefaults,
+        colors: ["Noir", "Rouge", "Beige"]
       },
       {
-        name: "Sac imprimé géométrique vintage léger tendance",
-        price: 8000000, // 80,000 FCFA en centimes
-        categoryId: "vintage-cat-002",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
-        description: "Sac tendance avec motifs géométriques vintage, léger et pratique pour un look moderne",
-        stock: 8,
-        status: "active",
-        sku: "C05N002",
-        material: "Toile enduite",
-        lining: "Coton",
-        dimensions: "30 x 25 x 8 cm",
-        weight: 0.4,
-        shape: "Rectangle",
-        styles: ["Vintage", "Décontracté", "Tendance"],
-        pattern: "Géométrique",
-        decoration: "Motifs imprimés",
-        closure: "Fermeture éclair",
-        handles: "Bandoulière réglable",
-        season: "Printemps-Été",
-        occasion: "Quotidien",
-        features: ["Léger", "Pratique"],
-        colors: ["Multicolore", "Beige", "Marron"],
-        gender: "Femme",
-        ageGroup: "Jeune Adulte"
-      },
-      {
-        name: "Sac à dos d'ordinateur résistant à l'eau antivol",
-        price: 12000000, // 120,000 FCFA en centimes
-        categoryId: "business-cat-003",
+        name: "Sac à dos professionnel antivol",
+        price: 12000000,
+        categoryId: catSacsDos.id,
+        productType: "sac",
+        unit: "piece",
+        brand: "ProBag",
         image: "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=400&h=400&fit=crop&crop=center",
         description: "Sac à dos professionnel antivol avec protection contre l'eau pour ordinateur portable",
         stock: 15,
         status: "active",
-        sku: "C05N003",
+        sku: "SAC002",
         material: "Nylon renforcé",
-        lining: "Polyester",
-        dimensions: "45 x 30 x 15 cm",
-        weight: 1.2,
-        shape: "Ergonomique",
-        styles: ["Business", "Moderne", "Fonctionnel"],
-        pattern: "Solide",
-        decoration: "Logo discret",
-        closure: "Fermeture éclair",
-        handles: "Bretelles rembourrées",
-        season: "Toutes saisons",
-        occasion: "Travail",
-        features: ["Imperméable", "Antivol", "Port USB", "Compartiment ordinateur"],
-        colors: ["Noir", "Gris", "Bleu marine"],
-        gender: "Unisexe",
-        ageGroup: "Adulte"
+        ...productDefaults,
+        colors: ["Noir", "Gris"]
       },
       {
-        name: "Sac bandoulière compact quotidien",
-        price: 6000000, // 60,000 FCFA en centimes
-        categoryId: "casual-cat-005",
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center",
-        description: "Sac bandoulière compact et pratique pour le quotidien, design moderne et fonctionnel",
+        name: "Chocolat ivoirien premium - 200g",
+        price: 350000,
+        categoryId: catChocolats.id,
+        productType: "alimentation",
+        unit: "boite",
+        brand: "Cacao CI",
+        image: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop",
+        description: "Chocolat noir premium fabriqué avec cacao ivoirien, tablette 200g",
+        stock: 50,
+        status: "active",
+        sku: "ALI001",
+        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        ...productDefaults
+      },
+      {
+        name: "Attiéké traditionnel - 1 kg",
+        price: 150000,
+        categoryId: catEpicerie.id,
+        productType: "alimentation",
+        unit: "kg",
+        brand: "Saveurs du terroir",
+        image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=400&fit=crop",
+        description: "Attiéké traditionnel ivoirien, produit local de qualité, sachet 1 kg",
+        stock: 100,
+        status: "active",
+        sku: "ALI002",
+        ...productDefaults
+      },
+      {
+        name: "Chargeur USB-C rapide 65W",
+        price: 850000,
+        categoryId: catAccessoiresTech.id,
+        productType: "electronique",
+        unit: "piece",
+        brand: "TechCharge",
+        image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+        description: "Chargeur universel USB-C 65W compatible ordinateurs et téléphones",
+        stock: 25,
+        status: "active",
+        sku: "ELEC001",
+        ...productDefaults
+      },
+      {
+        name: "Écouteurs Bluetooth sans fil",
+        price: 450000,
+        categoryId: catEcouteurs.id,
+        productType: "electronique",
+        unit: "piece",
+        brand: "SoundMax",
+        image: "https://images.unsplash.com/photo-1598331668826-20cecc596b86?w=400&h=400&fit=crop",
+        description: "Écouteurs Bluetooth 5.0 avec réduction de bruit, autonomie 24h",
+        stock: 30,
+        status: "active",
+        sku: "ELEC002",
+        ...productDefaults
+      },
+      {
+        name: "Portefeuille en cuir classique",
+        price: 2500000,
+        categoryId: catSacsMain.id,
+        productType: "sac",
+        unit: "piece",
+        brand: "LogoDouman",
+        image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop",
+        description: "Portefeuille en cuir véritable, style classique et élégant",
         stock: 20,
         status: "active",
-        sku: "C05N006",
-        material: "Coton canvas",
-        lining: "Polyester",
-        dimensions: "20 x 15 x 8 cm",
-        weight: 0.3,
-        shape: "Compact",
-        styles: ["Décontracté", "Moderne", "Pratique"],
-        pattern: "Solide",
-        decoration: "Logo brodé",
-        closure: "Fermeture éclair",
-        handles: "Bandoulière ajustable",
-        season: "Toutes saisons",
-        occasion: "Quotidien",
-        features: ["Compact", "Léger", "Pratique"],
-        colors: ["Beige", "Kaki", "Noir"],
-        gender: "Unisexe",
-        ageGroup: "Jeune Adulte"
+        sku: "SAC003",
+        material: "Cuir",
+        ...productDefaults,
+        colors: ["Marron", "Noir"]
+      },
+      {
+        name: "Pâte d'arachide naturelle - 500g",
+        price: 200000,
+        categoryId: catEpicerie.id,
+        productType: "alimentation",
+        unit: "sachet",
+        brand: "Saveurs du terroir",
+        image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&h=400&fit=crop",
+        description: "Pâte d'arachide 100% naturelle, sans additif",
+        stock: 80,
+        status: "active",
+        sku: "ALI003",
+        ...productDefaults
       }
     ];
 
@@ -412,10 +487,10 @@ async function main() {
         data: {
           type: 'STOCK_ALERT',
           title: 'Stock faible',
-          message: 'Le produit "Sac imprimé géométrique vintage" a un stock faible (8 unités)',
+          message: 'Le produit "Chocolat ivoirien premium" a un stock faible (50 unités)',
           isRead: false,
           userId: admin.id,
-          metadata: { productId: createdProducts[1].id }
+          metadata: { productId: createdProducts[2].id }
         }
       }),
       db.notification.create({
@@ -433,16 +508,16 @@ async function main() {
     console.log('\n🎉 Migration terminée avec succès !');
     console.log('\n📊 Résumé des données créées :');
     console.log(`   👤 Utilisateurs: 1 admin`);
-    console.log(`   🏷️ Catégories: ${categories.length}`);
+    console.log(`   🏷️ Catégories: ${allCategories.length}`);
     console.log(`   📦 Produits: ${createdProducts.length}`);
     console.log(`   👥 Clients: ${customers.length}`);
     console.log(`   🛒 Commandes: ${orders.length}`);
     console.log(`   🎉 Promotions: ${promotions.length}`);
     console.log(`   🔔 Notifications: 2`);
     
-    console.log('\n🔑 Compte admin créé :');
-    console.log(`   Email: admin@logodouman.com`);
-    console.log(`   Mot de passe: admin123`);
+    console.log('\n🔑 Comptes créés :');
+    console.log(`   Admin:  admin@logodouman.com / admin123`);
+    console.log(`   Vendeur: vendeur1@logodouman.com / admin123`);
     
     console.log('\n🚀 Vous pouvez maintenant :');
     console.log(`   • Vous connecter sur: http://localhost:3000/admin/login`);

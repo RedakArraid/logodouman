@@ -69,7 +69,7 @@ export default function BlogPage() {
               Notre Blog
             </h1>
             <p className="text-xl text-gray-300">
-              Conseils, tendances et actualités sur l'univers des sacs à main
+              Conseils, tendances et actualités sur nos produits
             </p>
           </div>
         </div>

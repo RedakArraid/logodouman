@@ -49,7 +49,7 @@ export default function PublicFooter() {
               LogoDouman
             </h3>
             <p className="text-gray-400 leading-relaxed mb-4">
-              Votre destination pour les sacs à main de qualité premium en Côte d'Ivoire.
+              Votre marketplace pour des produits de qualité : sacs, alimentation, électronique et plus. En Côte d&apos;Ivoire.
             </p>
             <div className="flex items-center gap-2 text-gray-400">
               <HeartIcon className="w-5 h-5 text-orange-500" />
@@ -92,7 +92,7 @@ export default function PublicFooter() {
           <div>
             <h4 className="font-semibold mb-4 text-orange-400 text-lg">Catégories</h4>
             <ul className="space-y-3">
-              {categories.map(category => (
+              {categories.filter(c => !c.parentId).map(category => (
                 <li key={category.id}>
                   <Link
                     href={`/boutique?category=${category.slug}`}

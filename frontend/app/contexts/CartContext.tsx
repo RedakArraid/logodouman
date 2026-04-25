@@ -58,7 +58,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, isHydrated]);
 
   const addItem = (product: Product, quantity: number, selectedColor?: string) => {
-    console.log('🛒 Ajout au panier:', { productId: product.id, name: product.name, quantity, selectedColor });
     setItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
         (item) => item.product.id === product.id && item.selectedColor === selectedColor
@@ -68,25 +67,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Mettre à jour la quantité si l'item existe déjà
         const updatedItems = [...prevItems];
         updatedItems[existingItemIndex].quantity += quantity;
-        console.log('✅ Quantité mise à jour:', updatedItems[existingItemIndex].quantity);
         return updatedItems;
       } else {
         // Ajouter un nouvel item
-        const newItems = [...prevItems, { product, quantity, selectedColor }];
-        console.log('✅ Nouvel item ajouté. Total items:', newItems.length);
-        return newItems;
+        return [...prevItems, { product, quantity, selectedColor }];
       }
     });
   };
 
   const removeItem = (productId: number, selectedColor?: string) => {
-    console.log('🗑️ Suppression du panier:', { productId, selectedColor });
     setItems((prevItems) => {
-      const filtered = prevItems.filter(
+      return prevItems.filter(
         (item) => !(item.product.id === productId && item.selectedColor === selectedColor)
       );
-      console.log('✅ Item supprimé. Restants:', filtered.length);
-      return filtered;
     });
   };
 
@@ -116,9 +109,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Calculer totalItems et totalPrice avec useMemo pour éviter les recalculs inutiles
   const totalItems = useMemo(() => {
-    const total = items.reduce((sum, item) => sum + item.quantity, 0);
-    console.log('📊 Calcul totalItems:', total, 'items:', items.length);
-    return total;
+    return items.reduce((sum, item) => sum + item.quantity, 0);
   }, [items]);
 
   const totalPrice = useMemo(() => {
@@ -127,18 +118,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       0
     );
   }, [items]);
-
-  // Debug: log du total items quand il change
-  useEffect(() => {
-    if (isHydrated) {
-      console.log('📊 Panier mis à jour:', { 
-        totalItems, 
-        totalPrice, 
-        itemsCount: items.length,
-        items: items.map(i => ({ id: i.product.id, qty: i.quantity }))
-      });
-    }
-  }, [totalItems, totalPrice, items.length, isHydrated, items]);
 
   return (
     <CartContext.Provider

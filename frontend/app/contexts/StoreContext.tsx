@@ -33,85 +33,75 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// Données par défaut pour le fallback offline
+function flattenCategories(cats: Array<{ id: string; subcategories?: unknown[] } & Record<string, unknown>>): Category[] {
+  const result: Category[] = [];
+  for (const c of cats || []) {
+    result.push({ ...c, parentId: null, subcategories: c.subcategories } as Category);
+    if (c.subcategories?.length) {
+      for (const sub of c.subcategories as Array<Record<string, unknown>>) {
+        result.push({ ...sub, parentId: c.id } as Category);
+      }
+    }
+  }
+  return result;
+}
+
+// Données par défaut pour le fallback offline (produits diversifiés)
 const defaultProducts: Product[] = [
   {
     id: 1,
-    name: "Sac à main verni brillant avec anneau de levage",
-    price: 10000000, // Prix en centimes (100,000 FCFA)
-    categoryId: "luxury-cat-001",
+    name: "Sac à main verni brillant",
+    price: 9500000,
+    categoryId: "sacs-cat-001",
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center",
-    description: "Sac à main élégant avec finition vernie brillante et anneau de levage doré pour femme",
+    description: "Sac à main élégant avec finition vernie brillante",
     stock: 12,
     status: 'active' as const,
-    sku: "C05N001",
+    sku: "SAC001",
+    productType: "sac",
+    unit: "piece",
     material: "Cuir PU",
-    lining: "Polyester",
-    dimensions: "25 x 18 x 12 cm",
-    weight: 0.7,
-    shape: "Rectangle",
-    styles: ["Mode", "Luxe", "Élégant"],
-    pattern: "Solide",
-    decoration: "Anneau doré",
-    closure: "Fermeture éclair",
-    handles: "Double poignée",
-    season: "Toutes saisons",
-    occasion: "Soirée",
-    features: ["Résistant", "Élégant"],
     colors: ["Noir", "Rouge", "Beige"],
-    gender: "Femme",
-    ageGroup: "Adulte",
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  // Ajouter d'autres produits par défaut...
-];
-
-const defaultCategories: Category[] = [
-  {
-    id: "luxury-cat-001",
-    name: "Luxe",
-    slug: "luxe",
-    description: 'Sacs haut de gamme en cuir premium et finitions dorées',
-    status: 'active' as const,
-    displayOrder: 0,
-    productCount: 0,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    id: "vintage-cat-002",
-    name: "Vintage",
-    slug: "vintage",
-    description: 'Designs rétro et motifs géométriques tendance',
+    id: 2,
+    name: "Chocolat ivoirien premium - 200g",
+    price: 350000,
+    categoryId: "alimentation-cat-002",
+    image: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop",
+    description: "Chocolat noir premium avec cacao ivoirien",
+    stock: 50,
     status: 'active' as const,
-    displayOrder: 1,
-    productCount: 0,
+    sku: "ALI001",
+    productType: "alimentation",
+    unit: "boite",
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
-    id: "business-cat-003",
-    name: "Business",
-    slug: "business",
-    description: 'Sacs professionnels et fonctionnels pour le travail',
+    id: 3,
+    name: "Chargeur USB-C rapide 65W",
+    price: 850000,
+    categoryId: "electronique-cat-003",
+    image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop",
+    description: "Chargeur universel USB-C 65W",
+    stock: 25,
     status: 'active' as const,
-    displayOrder: 2,
-    productCount: 0,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: "casual-cat-005",
-    name: "Casual",
-    slug: "casual",
-    description: 'Sacs pratiques et confortables pour tous les jours',
-    status: 'active' as const,
-    displayOrder: 3,
-    productCount: 0,
+    sku: "ELEC001",
+    productType: "electronique",
+    unit: "piece",
     createdAt: new Date(),
     updatedAt: new Date()
   }
+];
+
+const defaultCategories: Category[] = [
+  { id: "dept-sacs", name: "Sacs & Accessoires", slug: "sacs-accessoires", description: 'Sacs et accessoires', status: 'active' as const, displayOrder: 0, productCount: 0, createdAt: new Date(), updatedAt: new Date(), parentId: null },
+  { id: "dept-alimentation", name: "Alimentation", slug: "alimentation", description: 'Produits alimentaires', status: 'active' as const, displayOrder: 1, productCount: 0, createdAt: new Date(), updatedAt: new Date(), parentId: null },
+  { id: "dept-electronique", name: "Électronique", slug: "electronique", description: 'Tech et électronique', status: 'active' as const, displayOrder: 2, productCount: 0, createdAt: new Date(), updatedAt: new Date(), parentId: null },
+  { id: "dept-mode", name: "Mode & Vêtements", slug: "mode", description: 'Vêtements et chaussures', status: 'active' as const, displayOrder: 3, productCount: 0, createdAt: new Date(), updatedAt: new Date(), parentId: null }
 ];
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -130,11 +120,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const [productsData, categoriesData] = await Promise.all([
         ProductService.getAll(),
-        CategoryService.getAll()
+        CategoryService.getAll({ hierarchy: true })
       ]);
 
       setProducts(productsData);
-      setCategories(categoriesData);
+      // Aplatir la hiérarchie pour compatibilité (départements + sous-catégories)
+      const flat = flattenCategories(categoriesData);
+      setCategories(flat);
     } catch (err) {
       console.error('Erreur lors du chargement depuis l\'API:', err);
       setError('Impossible de charger les données depuis le serveur');

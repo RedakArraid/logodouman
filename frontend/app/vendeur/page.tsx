@@ -6,12 +6,14 @@ import Link from 'next/link';
 import {
   BuildingStorefrontIcon,
   ChartBarIcon,
-  CubeIcon,
   BanknotesIcon,
   ArrowRightIcon,
   CheckCircleIcon,
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { AuthService, SellerService } from '../config/api';
+import PublicHeader from '../components/PublicHeader';
+import PublicFooter from '../components/PublicFooter';
 
 export default function VendeurPage() {
   const router = useRouter();
@@ -80,14 +82,20 @@ export default function VendeurPage() {
   // Non connecté : présenter le concept et rediriger vers login
   if (!isAuthenticated && !AuthService.isAuthenticated()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-16 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
+        <PublicHeader />
+        <div className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-orange-600 mb-8 font-medium">
+            <ArrowLeftIcon className="w-5 h-5" />
+            Retour à l&apos;accueil
+          </Link>
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Devenez vendeur sur LogoDouman
             </h1>
             <p className="text-xl text-gray-600">
-              Vendez vos sacs et accessoires sur la plus grande marketplace de la région.
+              Vendez vos produits sur la plus grande marketplace de la région : sacs, alimentation, électronique et plus.
             </p>
           </div>
 
@@ -174,14 +182,22 @@ export default function VendeurPage() {
             )}
           </div>
         </div>
+        </div>
+        <PublicFooter />
       </div>
     );
   }
 
   // Connecté mais pas de compte vendeur : formulaire d'inscription
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 py-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
+      <PublicHeader />
+      <div className="py-16 px-4">
       <div className="max-w-2xl mx-auto">
+        <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-orange-600 mb-8 font-medium">
+          <ArrowLeftIcon className="w-5 h-5" />
+          Retour à l&apos;accueil
+        </Link>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Devenir vendeur</h1>
           <p className="text-gray-600">Remplissez le formulaire pour créer votre boutique.</p>
@@ -250,6 +266,8 @@ export default function VendeurPage() {
           </div>
         )}
       </div>
+      </div>
+      <PublicFooter />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function CGVPage() {
               
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">1. Objet</h2>
               <p className="text-gray-700 leading-relaxed mb-6">
-                Les présentes Conditions Générales de Vente (CGV) régissent les ventes de sacs à main et accessoires proposés par LogoDouman sur le site logodouman.genea.space. Toute commande implique l'acceptation sans réserve des présentes CGV.
+                Les présentes Conditions Générales de Vente (CGV) régissent les ventes de produits (sacs, alimentation, électronique et autres) proposés par LogoDouman et ses vendeurs sur le site logodouman.genea.space. Toute commande implique l&apos;acceptation sans réserve des présentes CGV.
               </p>
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">2. Produits</h2>

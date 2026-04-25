@@ -134,19 +134,14 @@ export default function ProductDetailPage() {
   const maxQuantity = product?.stock || 0;
 
   const handleAddToCart = () => {
-    if (!product || maxQuantity === 0) {
-      console.log('❌ Impossible d\'ajouter: produit manquant ou stock = 0');
-      return;
-    }
+    if (!product || maxQuantity === 0) return;
     
-    console.log('🛒 handleAddToCart appelé:', { productId: product.id, name: product.name, quantity, selectedColor });
     try {
       addItem(product, quantity, selectedColor || undefined);
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
-      console.log('✅ Produit ajouté au panier avec succès');
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'ajout au panier:', error);
+    } catch {
+      // Erreur silencieuse
     }
   };
 
@@ -459,7 +454,9 @@ export default function ProductDetailPage() {
               </button>
               
               <button
-                className="w-full py-4 px-6 rounded-xl font-bold text-lg border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-all"
+                onClick={() => { addItem(product, quantity, selectedColor || undefined); window.location.href = '/panier'; }}
+                disabled={maxQuantity === 0}
+                className="w-full py-4 px-6 rounded-xl font-bold text-lg border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Acheter maintenant
               </button>

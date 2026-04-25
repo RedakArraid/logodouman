@@ -62,11 +62,11 @@ model Seller {
   @@index([slug])
 }
 
-// ===== PRODUITS =====
+// ===== PRODUITS (polyvalents : sacs, alimentation, électronique, etc.) =====
 model Product {
   id          Int      @id @default(autoincrement())
   name        String
-  price       Int
+  price       Int      // Prix en centimes, par unité (piece, kg, litre...)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   sellerId    String?  // null = produit plateforme (admin), sinon = vendeur
@@ -77,6 +77,15 @@ model Product {
   stock       Int      @default(0)
   status      String   @default("active")
   sku         String?
+  brand       String?  // Marque (style Amazon)
+
+  // Type et unité (produits divers : sacs, nourriture, etc.)
+  productType String   @default("article") // article, sac, alimentation, electronique, autre
+  unit        String   @default("piece")   // piece, kg, g, litre, ml, sachet, boite, etc.
+  expiryDate   DateTime? // DLC pour alimentation
+  attributes   Json?    // Données spécifiques au type (allergènes, ingrédients, etc.)
+
+  // Champs optionnels (ex. sacs et accessoires)
   material    String?
   lining      String?
   coating     String?

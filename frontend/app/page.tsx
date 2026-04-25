@@ -49,13 +49,13 @@ export default function HomePage() {
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
               Meilleure offre
               <span className="block mt-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent">
-                sac à main premium
+                produits de qualité
               </span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 mb-10 leading-relaxed">
-              Découvrez notre collection exclusive de sacs à main premium, 
-              alliant élégance, qualité et fonctionnalité pour toutes vos occasions.
+              Sacs, alimentation, électronique et bien plus. 
+              Découvrez notre marketplace aux produits variés, de qualité et à prix justes.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -116,7 +116,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map(category => (
+            {categories.filter(c => !c.parentId).map(category => (
               <Link
                 key={category.id}
                 href={`/boutique?category=${category.slug}`}
@@ -190,7 +190,7 @@ export default function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-4 left-4 right-4">
                         <Link
-                          href="/boutique"
+                          href={`/boutique/${product.id}`}
                           className="w-full block bg-white text-gray-900 py-2.5 px-4 rounded-lg font-bold hover:bg-orange-500 hover:text-white transition-all shadow-xl text-center"
                         >
                           Voir les détails
@@ -228,22 +228,25 @@ export default function HomePage() {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <div>
                         <div className="text-2xl font-bold text-gray-900">
-                          {Math.round(product.price / 100).toLocaleString()} F
+                          {Math.round(product.price / 100).toLocaleString()} FCFA
                         </div>
                         <div className="text-xs text-gray-500 font-medium">
                           Prix TTC
                         </div>
                       </div>
-                      <button 
-                        className={`p-3 rounded-xl transition-all ${
-                          (product.stock || 0) === 0 
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl hover:scale-110'
-                        }`}
-                        disabled={(product.stock || 0) === 0}
-                      >
-                        <ShoppingBagIcon className="w-6 h-6" />
-                      </button>
+                      {(product.stock || 0) === 0 ? (
+                        <span className="p-3 rounded-xl bg-gray-200 text-gray-500 cursor-not-allowed inline-flex" aria-hidden>
+                          <ShoppingBagIcon className="w-6 h-6" />
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/boutique/${product.id}`}
+                          className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl hover:scale-110 transition-all inline-flex items-center justify-center"
+                          aria-label="Voir le produit"
+                        >
+                          <ShoppingBagIcon className="w-6 h-6" />
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -256,7 +259,7 @@ export default function HomePage() {
               href="/boutique"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all font-bold shadow-lg hover:shadow-xl hover:scale-105"
             >
-              Voir toute la collection
+              Voir tous les produits
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
           </div>
@@ -267,7 +270,7 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Prêt à découvrir votre prochain sac favori ?
+            Prêt à découvrir nos produits ?
           </h2>
           <p className="text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
             Rejoignez des milliers de clients satisfaits en Côte d'Ivoire

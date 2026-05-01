@@ -7,10 +7,9 @@ description: Gère l'infrastructure LogoDouman (Docker, Traefik, déploiement). 
 
 ## Contexte
 
-- **Projet** : logodouman (dans /root/logodouman)
-- **Traefik** : partagé au niveau VPS (/root/docker-compose.yml)
-- **Réseau** : `traefik_network` (externe)
-- **URLs** : logodouman.genea.space, apilogodouman.genea.space
+- **Projet** : dépôt `logodouman` (racine du clone, ex. `~/logodouman`)
+- **Production** : souvent déployé derrière **Traefik** (`docker-compose.prod.yml`, réseau externe type `traefik_network`)
+- **URLs d’exemple (hébergement historique)** : `logodouman.genea.space`, `apilogodouman.genea.space` — à adapter selon ton domaine
 
 ## Fichiers clés
 

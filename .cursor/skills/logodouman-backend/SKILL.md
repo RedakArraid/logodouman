@@ -7,12 +7,12 @@ description: Développe le backend LogoDouman (Express, Prisma, Node.js). Routes
 
 ## Stack
 
-- **Framework** : Express.js 4.18
+- **Framework** : Express.js 4.x
 - **ORM** : Prisma
 - **Validation** : Zod
 - **Auth** : JWT (jsonwebtoken), bcrypt
 - **Base** : PostgreSQL
-- **Cache** : Redis
+- **Cache / broker** : Redis (selon usage)
 - **Upload** : Multer + Cloudinary
 
 ## Répertoires clés
@@ -20,36 +20,38 @@ description: Développe le backend LogoDouman (Express, Prisma, Node.js). Routes
 ```
 logodouman/backend/
 ├── src/
-│   ├── app.js              # Point d'entrée, routes
-│   ├── routes.*.js         # Routes par ressource
-│   ├── middleware.auth.js  # requireAuth, requireAdmin, requireSeller
-│   ├── services/           # cloudinary.service.js
-│   └── prisma/             # schema.prisma, migrations
+│   ├── app.js                 # Point d’entrée, montage `/api/*`
+│   ├── routes.*.js            # products, categories, auth, orders, …
+│   ├── middleware.auth.js     # requireAuth, requireAdmin, requireSeller, …
+│   └── services/              # cloudinary.service.js, …
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── scripts/                   # migrate.js, seed.js, …
+└── Dockerfile
 ```
 
 ## Conventions
 
-- Prix **toujours en centimes** en BDD
-- Validation Zod sur toutes les entrées
-- `requireAuth` : utilisateur connecté
-- `requireAdmin` : role === 'admin'
-- `requireSeller` : User avec Seller lié (nouveau pour marketplace)
+- Prix **en centimes** en base
+- Valider les entrées (Zod ou équivalent sur les routes)
+- `requireAuth` : utilisateur JWT back-office ; client : middlewares `account` / `customer` selon les routes
+- Marketplace : modèles `Seller`, `SellerPayout`, champs `sellerId` sur `Product` et `OrderItem`
 
-## Marketplace - À implémenter
+## Marketplace (schéma & routes)
 
-### Modèles Prisma
-- `Seller` : storeName, slug, userId, status, commissionRate
-- `Product.sellerId` : lien optionnel (null = produits plateforme)
-- `OrderItem.sellerId` : pour commission / payout
-- `SellerPayout` : suivi des versements
-- `Commission` : taux par catégorie ou global
+### Prisma (extraits)
 
-### Routes
-- `POST /api/auth/register-seller`
-- `GET /api/sellers` (liste publique)
-- `GET /api/sellers/:slug` (profil public)
-- `GET/PUT /api/sellers/me` (dashboard vendeur, protégé)
-- `GET /api/sellers/me/products`
-- `GET /api/sellers/me/orders`
-- `GET /api/sellers/me/earnings`
-- Produits : filtre `?sellerId=xxx` sur GET /api/products
+- `Seller` : boutique, slug, statut, `commissionRate`, etc.
+- `Product.sellerId` optionnel (plateforme si `null`)
+- `OrderItem` : commission et gains vendeur
+- `SellerPayout` : versements
+
+### Routes ` /api/sellers`
+
+- Public : liste, profil par slug ou id
+- `POST /register` : inscription vendeur (utilisateur connecté)
+- `/me/*` : profil, produits, commandes, gains, demandes de payout
+- `/admin/*` : modération vendeurs et payouts (admin)
+
+Auth complémentaire : `POST /api/auth/signup-seller` (user + seller `pending`).

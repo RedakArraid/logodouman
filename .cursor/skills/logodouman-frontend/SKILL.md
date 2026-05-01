@@ -10,42 +10,44 @@ description: Développe le frontend LogoDouman (Next.js 14, React, TypeScript, T
 - **Framework** : Next.js 14 (App Router)
 - **Langage** : TypeScript
 - **Styling** : Tailwind CSS
-- **État** : React Context (StoreContext, CartContext)
-- **API** : fetch vers `NEXT_PUBLIC_API_URL`
+- **État** : React Context (StoreContext, CartContext, etc.)
+- **API** : fetch vers `NEXT_PUBLIC_API_URL` ; SSR possible via `INTERNAL_API_URL` sous Docker
 
 ## Répertoires clés
 
 ```
 logodouman/frontend/
-├── app/                    # Pages et layouts
-│   ├── page.tsx           # Accueil
-│   ├── boutique/          # Catalogue
-│   ├── admin/             # Admin plateforme
-│   ├── vendeur/           # Espace vendeur (marketplace)
-│   ├── components/        # Composants publics
-│   ├── contexts/          # Contextes React
-│   ├── config/            # api.ts, analytics, currency
-│   └── types/             # Types (dans frontend/types via ../../types)
+├── app/
+│   ├── page.tsx, layout.tsx
+│   ├── boutique/           # Catalogue & fiche produit
+│   ├── panier/, checkout/
+│   ├── compte/             # Client (login, commandes…)
+│   ├── vendeur/            # Espace vendeur + page publique [slug]
+│   ├── devenir-vendeur/
+│   ├── admin/              # Admin + dashboard
+│   ├── components/
+│   ├── contexts/
+│   ├── config/             # api.ts, analytics, devise
+│   └── …                   # blog, contact, mentions légales, CGV
+├── types/
+└── Dockerfile
 ```
 
 ## Conventions
 
-- Prix **toujours en centimes** côté API, format FCFA à l'affichage via `formatPrice()`
-- Composants fonctionnels avec hooks
-- Utiliser les types de `types/index.ts`
-- Images : Cloudinary (composant `CloudinaryImageUpload`)
+- Prix **en centimes** côté API ; affichage FCFA via les utilitaires du projet
+- Composants fonctionnels + hooks
+- Préférer les types partagés dans `frontend/types` (ou chemins équivalents du repo)
+- Upload images : `CloudinaryImageUpload` + API backend
 
-## Marketplace - À implémenter
+## Marketplace (implémenté côté routes)
 
-- Page `/vendeur` : inscription vendeur, dashboard vendeur
-- Produits liés au vendeur dans les listings
-- Panier multi-vendeurs (groupement par vendeur)
-- Profil vendeur public (`/vendeur/[slug]`)
-- Filtre par vendeur dans la boutique
+- Pages vendeur : `/vendeur`, `/devenir-vendeur`, `/vendeur/dashboard`, `/vendeur/[slug]`
+- Panier multi-vendeurs et intégration checkout selon `CartContext` / flux API
 
-## API à consommer
+## API utiles (consommation)
 
-- `GET/POST /api/products` (avec ?sellerId pour filtrage)
-- `GET /api/sellers` (liste, profil)
-- `POST /api/auth/register-seller` (inscription vendeur)
-- `GET /api/sellers/me/*` (dashboard vendeur, protégé)
+- `GET/POST /api/products` (filtres query dont vendeur si exposé)
+- `GET /api/sellers`, `GET /api/sellers/slug/:slug`
+- `POST /api/sellers/register` (JWT utilisateur) ou `POST /api/auth/signup-seller`
+- `GET /api/sellers/me/*` (dashboard vendeur, authentifié)

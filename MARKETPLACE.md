@@ -1,58 +1,71 @@
-# 🛒 LogoDouman - Marketplace
+# LogoDouman — Marketplace
 
-## Vue d'ensemble
+## Vue d’ensemble
 
-LogoDouman est désormais une **marketplace complète** permettant à plusieurs vendeurs de proposer leurs produits sur la plateforme.
+LogoDouman est une **marketplace** : plusieurs vendeurs peuvent proposer des produits ; la plateforme applique une **commission** configurable par vendeur.
 
 ## Fonctionnalités
 
 ### Pour les vendeurs
-- **Inscription** : `/vendeur` — créer un compte vendeur (nécessite un compte utilisateur)
-- **Dashboard vendeur** : `/vendeur/dashboard` — revenus, produits, commandes
-- **Gestion produits** : Les vendeurs peuvent créer/modifier leurs produits via l'admin (redirigés selon leur rôle)
+
+- **Présentation** : `/vendeur`
+- **Devenir vendeur** : `/devenir-vendeur`
+- **Tableau de bord** : `/vendeur/dashboard` (produits dédiés : `/vendeur/dashboard/produits`)
+- **Profil public** : `/vendeur/[slug]`
 
 ### Pour les acheteurs
-- **Panier multi-vendeurs** : Les articles sont groupés par vendeur dans le panier
-- **Profil vendeur** : `/vendeur/[slug]` — page publique (à venir)
-- **Filtre par vendeur** : `GET /api/products?sellerId=xxx`
 
-### Pour l'administrateur
-- **Gestion des vendeurs** : Onglet "Vendeurs" dans le dashboard admin
-- **Approuver / Suspendre** : Validation des demandes d'inscription vendeur
-- **Commission** : Taux configurable par vendeur (défaut 10 %)
+- **Panier multi-vendeurs** : regroupement des articles par vendeur
+- **Filtre vendeur** : `GET /api/products?sellerId=...` (selon implémentation des query params côté API)
 
-## Modèle de données
+### Pour l’administrateur
 
-- **Seller** : storeName, slug, status (pending/approved/suspended), commissionRate
-- **Product.sellerId** : nullable — `null` = produit plateforme, sinon = vendeur
-- **OrderItem** : sellerId, commissionAmount, sellerEarnings (calculés à la création de commande)
-- **SellerPayout** : suivi des versements aux vendeurs
+- Gestion des vendeurs (approbation / suspension, commission)
+- Suivi des versements (`SellerPayout`, routes admin vendeurs)
 
-## API vendeurs
+## Modèle de données (Prisma)
+
+- **Seller** : `storeName`, `slug`, `status` (`pending` / `approved` / `suspended`), `commissionRate`, etc.
+- **Product.sellerId** : `null` = produit plateforme ; sinon lien vers un vendeur
+- **OrderItem** : `sellerId`, `commissionAmount`, `sellerEarnings`
+- **SellerPayout** : demandes et historique des versements
+
+## API vendeurs (`/api/sellers`)
 
 | Méthode | Route | Description |
 |---------|-------|-------------|
-| GET | /api/sellers | Liste des vendeurs approuvés |
-| GET | /api/sellers/slug/:slug | Profil public par slug |
-| POST | /api/sellers/register | Inscription vendeur (auth requise) |
-| GET | /api/sellers/me/profile | Mon profil (vendeur) |
-| PUT | /api/sellers/me/profile | Modifier mon profil |
-| GET | /api/sellers/me/products | Mes produits |
-| GET | /api/sellers/me/orders | Mes commandes |
-| GET | /api/sellers/me/earnings | Mes revenus |
-| GET | /api/sellers/admin/all | Tous les vendeurs (admin) |
-| PUT | /api/sellers/admin/:id/approve | Approuver/suspendre (admin) |
+| GET | `/` | Liste des vendeurs (profils publics / filtrés) |
+| GET | `/slug/:slug` | Profil par slug |
+| GET | `/:id` | Détail par id |
+| POST | `/register` | Inscription vendeur (JWT utilisateur requis) |
+| GET | `/me/status` | Statut du compte vendeur pour l’utilisateur connecté |
+| GET | `/me/profile` | Profil vendeur (connecté, vendeur approuvé) |
+| PUT | `/me/profile` | Mise à jour du profil |
+| GET | `/me/products` | Produits du vendeur |
+| GET | `/me/orders` | Commandes concernant le vendeur |
+| GET | `/me/earnings` | Revenus |
+| POST | `/me/payouts/request` | Demande de versement |
+| GET | `/me/payouts` | Historique des versements |
+| GET | `/admin/all` | Tous les vendeurs (admin) |
+| GET | `/admin/payouts` | Versements (admin) |
+| PUT | `/admin/payouts/:id` | Traiter un versement (admin) |
+| PUT | `/admin/:id/approve` | Approuver / suspendre (admin) |
 
-## Migration
+Inscription alternative côté auth : `POST /api/auth/signup-seller`.
 
-Exécuter les migrations Prisma :
+## Migrations
+
 ```bash
-cd logodouman/backend
+cd backend
 npx prisma migrate deploy
 ```
 
-Ou au démarrage Docker (automatique).
+Sous Docker, les migrations sont en général exécutées au démarrage du backend ou via `npm run docker:migrate` à la racine du monorepo.
 
-## Agents
+## Agents Cursor
 
-Voir [AGENTS.md](./AGENTS.md) pour l'organisation des sous-agents (Manager, Frontend, Backend, Infra).
+Voir [AGENTS.md](./AGENTS.md) pour l’organisation Manager / Frontend / Backend / Infra.
+
+---
+
+*Documentation alignée sur le code — 1ᵉʳ mai 2026.*

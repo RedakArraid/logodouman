@@ -81,16 +81,13 @@ export const AnalyticsService = {
     apiService.get(`/api/analytics/export/${type}?period=${timeRange.period}&format=${format}`),
 };
 
-// Utilitaires de formatage
+// Utilitaires de formatage (admin dashboard — toujours en FCFA)
 export const formatCurrency = (amount: number): string => {
-  // Les montants en BDD sont déjà en centimes
-  // On affiche en FCFA (1€ = 656 FCFA environ, mais ici on garde les centimes)
-  const amountInFCFA = amount; // Déjà en centimes, on les affiche comme des FCFA
   return new Intl.NumberFormat('fr-FR', {
     style: 'decimal',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amountInFCFA) + ' F';
+  }).format(Math.round(amount)) + ' FCFA';
 };
 
 export const formatNumber = (number: number): string => {

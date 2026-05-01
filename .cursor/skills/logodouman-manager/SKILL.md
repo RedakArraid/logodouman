@@ -38,3 +38,7 @@ Agent **orchestrateur** qui ne code pas. Coordonne les 3 agents techniques (Fron
 - Ne jamais coder soi-même
 - Toujours mentionner explicitement l'agent cible dans la délégation
 - Pour les features marketplace : coordonner schema Prisma (backend) + API (backend) + UI (frontend) + deploy (infra)
+
+## Documentation
+
+- Point d’entrée humain : [README.md](../../../README.md), [MARKETPLACE.md](../../../MARKETPLACE.md), [ANALYSE_PROJET.md](../../../ANALYSE_PROJET.md), [AGENTS.md](../../../AGENTS.md)

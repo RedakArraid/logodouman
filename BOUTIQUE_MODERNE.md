@@ -1,4 +1,8 @@
-# 🛍️ Boutique Moderne - LogoDouman
+# Boutique moderne — LogoDouman
+
+> **Contexte** : ce document décrit l’expérience **catalogue** (`/boutique` — filtres, tri, UI). Pour l’architecture du monorepo, les commandes Docker et les API, voir [README.md](./README.md) et [ANALYSE_PROJET.md](./ANALYSE_PROJET.md).
+
+---
 
 ## 🎉 Nouvelle expérience de shopping !
 

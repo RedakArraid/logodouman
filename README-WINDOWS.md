@@ -70,8 +70,8 @@ git clone <url-du-repo>
 cd logodouman
 
 # Construire et démarrer
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ---
@@ -83,11 +83,16 @@ docker-compose up -d
 | **Frontend** | http://localhost:3000 | Interface utilisateur |
 | **Backend API** | http://localhost:4002 | API REST |
 | **Adminer** | http://localhost:8080 | Interface base de données |
-| **Admin** | http://localhost:3000/admin | Interface admin |
+| **Admin** | http://localhost:3000/admin | Interface admin (voir aussi `/admin/login`) |
 
-**Identifiants admin :**
+**Identifiants admin (seed / Docker, dev uniquement) :**
+
+Voir le tableau complet dans [CREDENTIALS.md](./CREDENTIALS.md). Exemple administrateur :
+
 - Email : `admin@logodouman.com`
-- Mot de passe : `admin123`
+- Mot de passe : `Admin@2024!` (ou la valeur de `SEED_ADMIN_PASSWORD` dans `backend/.env.docker`)
+
+**Ports base de données (docker compose du repo) :** PostgreSQL **5433**, Redis **6380**, Adminer **8080**.
 
 ---
 
@@ -106,8 +111,8 @@ docker ps
 
 ### **3. Vérifier les services**
 ```bash
-docker-compose ps
-docker-compose logs -f
+docker compose ps
+docker compose logs -f
 ```
 
 ---
@@ -147,21 +152,21 @@ ports:
 
 ```bash
 # Voir les logs
-docker-compose logs -f frontend
-docker-compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f backend
 
 # Redémarrer un service
-docker-compose restart frontend
+docker compose restart frontend
 
 # Reconstruire après modification
-docker-compose build frontend --no-cache
-docker-compose up -d frontend
+docker compose build frontend --no-cache
+docker compose up -d frontend
 
 # Arrêter tout
-docker-compose down
+docker compose down
 
 # Nettoyer tout
-docker-compose down -v
+docker compose down -v
 docker system prune -a
 ```
 
@@ -173,9 +178,11 @@ Si vous rencontrez des problèmes :
 
 1. **Vérifiez les prérequis** (Windows 10/11, privilèges admin)
 2. **Suivez le guide de dépannage** ci-dessus
-3. **Consultez les logs** : `docker-compose logs -f`
+3. **Consultez les logs** : `docker compose logs -f`
 4. **Redémarrez Windows** après installation de WSL2
 
 ---
 
-**🎉 Félicitations ! Votre environnement LogoDouman est prêt !** 
+**Félicitations !** Votre environnement LogoDouman est prêt.
+
+*Guide revu en mai 2026 (commandes `docker compose`, alignement avec [CREDENTIALS.md](./CREDENTIALS.md)).*

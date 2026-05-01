@@ -1,4 +1,4 @@
-# 🤖 Agents LogoDouman
+# Agents LogoDouman
 
 Organisation des agents pour le développement de la marketplace LogoDouman.
 
@@ -28,11 +28,33 @@ Organisation des agents pour le développement de la marketplace LogoDouman.
 | **Backend** | logodouman-backend | Oui | API, Prisma, auth, logique métier |
 | **Infra** | logodouman-infra | Oui | Docker, Traefik, volumes, déploiement |
 
+Les définitions détaillées des skills sont dans :
+
+- `.cursor/skills/logodouman-manager/SKILL.md`
+- `.cursor/skills/logodouman-frontend/SKILL.md`
+- `.cursor/skills/logodouman-backend/SKILL.md`
+- `.cursor/skills/logodouman-infra/SKILL.md`
+
+## Documentation produit / technique
+
+| Document | Rôle |
+|----------|------|
+| [README.md](./README.md) | Démarrage, structure du dépôt, liens |
+| [MARKETPLACE.md](./MARKETPLACE.md) | Vendeurs, commissions, API |
+| [ANALYSE_PROJET.md](./ANALYSE_PROJET.md) | Analyse technique, schéma, endpoints |
+| [CREDENTIALS.md](./CREDENTIALS.md) | Comptes de test |
+| [CLOUDINARY_GUIDE.md](./CLOUDINARY_GUIDE.md) | Médias |
+| [README-WINDOWS.md](./README-WINDOWS.md) | Installation Windows |
+| Modèles Docker | `backend/.env.docker.example`, `frontend/.env.docker.example` |
+
 ## Usage
 
-Les skills sont dans `.cursor/skills/`. Cursor les utilise automatiquement selon le contexte.
-
 Pour une tâche full-stack marketplace :
-1. Manager découpe en : schema (backend) → API (backend) → UI (frontend) → deploy (infra)
-2. Chaque agent travaille sur son périmètre
-3. Manager valide la cohérence
+
+1. Le **Manager** découpe en : schéma/API (backend) → UI (frontend) → déploiement (infra).
+2. Chaque agent technique reste sur son périmètre.
+3. Le **Manager** valide la cohérence des livrables.
+
+---
+
+*Index documentation — 1ᵉʳ mai 2026.*

@@ -1,25 +1,23 @@
 # 📊 Analyse Complète du Projet LogoDouman
 
-**Date d'analyse** : 2025-01-27  
+**Date d'analyse** : 2026-05-01  
 **Version du projet** : 2.1.0  
-**Type** : Plateforme E-commerce Full-Stack
+**Type** : Marketplace e-commerce full-stack
 
 ---
 
 ## 🎯 Vue d'Ensemble
 
-**LogoDouman** est une plateforme e-commerce moderne et complète développée avec une architecture full-stack, spécialisée dans la vente de sacs à main premium. Le projet est conçu pour être scalable, moderne et prêt pour la production avec Docker.
+**LogoDouman** est une plateforme e-commerce / marketplace (catalogue multi-vendeurs, commissions, versements). Le dépôt est structuré en monorepo (**frontend** Next.js, **backend** Express + Prisma) et prévoit un déploiement Docker (local + production avec Traefik).
 
-### Caractéristiques Principales
-- ✅ Architecture microservices avec Docker
-- ✅ Frontend Next.js 14 avec TypeScript
-- ✅ Backend Express.js avec Prisma ORM
-- ✅ Base de données PostgreSQL
-- ✅ Intégration Cloudinary pour les images
-- ✅ Interface d'administration complète
-- ✅ Design moderne avec Tailwind CSS
-- ✅ Système de panier et commandes
-- ✅ Gestion des promotions et clients
+### Caractéristiques principales
+
+- ✅ Monorepo **frontend / backend** avec Docker local (`docker-compose.yml`)
+- ✅ Marketplace (**Seller**, commissions, **SellerPayout**)
+- ✅ Frontend Next.js 14 avec TypeScript ; backend Express avec Prisma
+- ✅ PostgreSQL + Redis ; images **Cloudinary**
+- ✅ Espace client (`/api/account`), paiements (**Paystack / Stripe / CinetPay** selon `.env`)
+- ✅ Administration, espace vendeur, avis produits (`Review`)
 
 ---
 
@@ -49,11 +47,12 @@
 
 #### Infrastructure
 - **Containerisation** : Docker + Docker Compose
-- **Services** :
-  - Frontend (Next.js) - Port 3000/3001
-  - Backend (Express) - Port 4002
-  - PostgreSQL - Port 5432
-  - Redis (optionnel) - Port 6379
+- **Services (docker compose du dépôt)** :
+  - Frontend — port hôte **3000**
+  - Backend — port hôte **4002**
+  - PostgreSQL — port hôte **5433** (5432 dans le réseau Docker)
+  - Redis — port hôte **6380** (6379 dans le réseau Docker)
+  - Adminer — port hôte **8080**
 - **Stockage images** : Cloudinary CDN
 
 ---
@@ -62,54 +61,46 @@
 
 ```
 logodouman/
-├── frontend/                    # Application Next.js
-│   ├── app/                    # App Router (Next.js 14)
-│   │   ├── page.tsx           # Page d'accueil
-│   │   ├── boutique/         # Page boutique
-│   │   ├── admin/             # Interface d'administration
-│   │   │   ├── dashboard/     # Tableau de bord
-│   │   │   ├── customers/     # Gestion clients
-│   │   │   ├── orders/        # Gestion commandes
-│   │   │   └── login/         # Authentification
-│   │   ├── components/        # Composants réutilisables
-│   │   ├── contexts/          # Contextes React
-│   │   │   └── StoreContext.tsx  # État global
-│   │   ├── config/            # Configuration API
-│   │   ├── utils/             # Utilitaires
-│   │   └── styles.css         # Styles globaux
-│   ├── public/                # Fichiers statiques
-│   ├── types/                 # Types TypeScript
-│   ├── Dockerfile             # Image Docker frontend
-│   ├── next.config.js         # Configuration Next.js
-│   └── tailwind.config.js     # Configuration Tailwind
-│
-├── backend/                    # API Express.js
-│   ├── src/
-│   │   ├── app.js             # Point d'entrée
-│   │   ├── routes.*.js        # Routes API
-│   │   │   ├── routes.product.js
-│   │   │   ├── routes.category.js
-│   │   │   ├── routes.auth.js
-│   │   │   ├── routes.orders.js
-│   │   │   ├── routes.customers.js
-│   │   │   ├── routes.promotions.js
-│   │   │   └── routes.dashboard.js
-│   │   ├── middleware.auth.js # Middleware authentification
-│   │   └── services/          # Services métier
-│   │       └── cloudinary.service.js
-│   ├── prisma/
-│   │   ├── schema.prisma      # Schéma base de données
-│   │   └── migrations/        # Migrations Prisma
-│   ├── scripts/               # Scripts utilitaires
-│   │   ├── migrate.js         # Migration BDD
-│   │   └── docker-entrypoint.sh
-│   ├── Dockerfile             # Image Docker backend
+├── frontend/                 # Next.js 14 (App Router)
+│   ├── app/
+│   │   ├── page.tsx          # Accueil
+│   │   ├── boutique/         # Catalogue & fiche produit
+│   │   ├── panier/, checkout/
+│   │   ├── compte/           # Espace client (login, commandes…)
+│   │   ├── vendeur/          # Espace vendeur + profil public [slug]
+│   │   ├── devenir-vendeur/
+│   │   ├── admin/            # Admin (dashboard, login)
+│   │   ├── components/, contexts/, config/
+│   │   └── …                 # blog, contact, CGV, mentions légales, etc.
+│   ├── public/
+│   ├── types/
+│   ├── Dockerfile
 │   └── package.json
 │
-├── docker-compose.yml          # Configuration Docker
-├── package.json               # Scripts racine
-├── README.md                  # Documentation principale
-└── BOUTIQUE_MODERNE.md        # Documentation boutique
+├── backend/                  # API Express
+│   ├── src/
+│   │   ├── app.js            # Point d’entrée, montage des routes /api/*
+│   │   ├── routes.*.js       # product, category, auth, orders, customers,
+│   │   │                     # promotions, dashboard, reviews, sellers,
+│   │   │                     # account, payment, shipping
+│   │   ├── middleware.auth.js
+│   │   └── services/         # cloudinary.service.js, …
+│   ├── prisma/
+│   ├── scripts/              # migrate.js, seed.js, …
+│   ├── Dockerfile
+│   └── package.json
+│
+├── docker-compose.yml        # Dev local (ports hôtes : 3000, 4002, 5433, 6380, 8080)
+├── docker-compose.prod.yml   # Prod (Traefik) — voir skill infra
+├── backend/.env.docker.example
+├── frontend/.env.docker.example
+├── package.json              # Scripts racine (dev, docker, db, lint)
+├── README.md
+├── MARKETPLACE.md
+├── ANALYSE_PROJET.md
+├── CREDENTIALS.md
+├── CLOUDINARY_GUIDE.md
+└── BOUTIQUE_MODERNE.md
 ```
 
 ---
@@ -173,9 +164,10 @@ logodouman/
 - Seuil d'alerte stock faible
 - Relations : produit
 
-#### 10. **User** (Utilisateurs Admin)
-- Authentification email/password
-- Rôles (admin, user)
+#### 10. **User** (comptes back-office)
+- Authentification email/password (bcrypt)
+- Rôles : `user`, `admin`, `seller` (selon `schema.prisma`)
+- Relation optionnelle **Seller** pour les comptes vendeurs
 - Relations : commandes, notifications
 
 #### 11. **Notification** (Notifications)
@@ -183,58 +175,75 @@ logodouman/
 - Statut lu/non lu
 - Métadonnées JSON
 
+#### 12. **Seller** / **SellerPayout** / **ReturnRequest** / **Review**
+- Voir [MARKETPLACE.md](./MARKETPLACE.md) pour le périmètre vendeurs
+- **ReturnRequest** : demandes de retour liées client + commande
+- **Review** : avis produits (modération par statut)
+
 ---
 
 ## 🔌 API Endpoints
 
+Toutes les routes ci-dessous sont montées sous le préfixe indiqué (ex. `/api/products`). Les protections (`requireAuth`, rôles `admin` / `manager` / vendeur) sont celles définies dans les fichiers `routes.*.js`.
+
 ### Produits (`/api/products`)
-- `GET /` - Liste tous les produits
-- `GET /:id` - Détails d'un produit
-- `POST /` - Créer un produit
-- `PUT /:id` - Modifier un produit
-- `DELETE /:id` - Supprimer un produit
-- `POST /upload` - Upload image Cloudinary
+- `GET /` — Liste (filtres query possibles, ex. vendeur)
+- `GET /:id` — Détail
+- `POST /` — Création (auth + droits rédaction produits)
+- `PUT /:id` — Mise à jour
+- `DELETE /:id` — Suppression
+- `POST /upload` — Upload média (Cloudinary)
 
 ### Catégories (`/api/categories`)
-- `GET /` - Liste toutes les catégories
-- `GET /:id` - Détails d'une catégorie
-- `POST /` - Créer une catégorie
-- `PUT /:id` - Modifier une catégorie
-- `DELETE /:id` - Supprimer une catégorie
-- Support hiérarchie avec `?hierarchy=true`
+- `GET /` — Liste
+- `GET /:id` — Détail
+- `POST /`, `PUT /:id`, `DELETE /:id` — CRUD (rôles admin/manager selon opération)
 
-### Authentification (`/api/auth`)
-- `POST /register` - Inscription
-- `POST /login` - Connexion
-- `POST /logout` - Déconnexion
-- `GET /me` - Profil utilisateur
+### Authentification back-office (`/api/auth`)
+- `GET /verify` — Vérification token
+- `POST /signup`, `POST /signup-seller` — Inscriptions
+- `POST /login`, `POST /logout`
+- `GET /profile` — Profil utilisateur (JWT User)
+
+### Espace client (`/api/account`)
+- `POST /register`, `POST /login`
+- `GET /me`, `GET /orders`, `GET /orders/:id`
+- `POST /orders/:id/return-request`
+- `GET /orders/:id/invoice`
+- `POST /wishlist/products` — Wishlist
 
 ### Commandes (`/api/orders`)
-- `GET /` - Liste toutes les commandes
-- `GET /:id` - Détails d'une commande
-- `POST /` - Créer une commande
-- `PUT /:id` - Modifier le statut
-- `GET /customer/:customerId` - Commandes d'un client
+- `POST /checkout` — Checkout public / création de commande
+- `GET /`, `GET /:id`, `POST /`, `PUT /:id` — Gestion (admin/manager)
+- `GET /stats/overview` — Statistiques commandes (admin/manager)
 
 ### Clients (`/api/customers`)
-- `GET /` - Liste tous les clients
-- `GET /:id` - Détails d'un client
-- `POST /` - Créer un client
-- `PUT /:id` - Modifier un client
-- `GET /:id/stats` - Statistiques client
+- CRUD + `GET /:id/analytics`, `GET /analytics/segmentation` (admin/manager)
 
 ### Promotions (`/api/promotions`)
-- `GET /` - Liste toutes les promotions
-- `GET /:code` - Détails d'une promotion
-- `POST /` - Créer une promotion
-- `PUT /:id` - Modifier une promotion
-- `POST /validate` - Valider un code promo
+- CRUD, `POST /validate`, `GET /analytics/overview`, `GET /analytics/expiring` (auth selon route)
 
-### Dashboard (`/api/dashboard`)
-- `GET /stats` - Statistiques globales
-- `GET /sales` - Statistiques de ventes
-- `GET /products` - Top produits
-- `GET /customers` - Top clients
+### Tableau de bord (`/api/dashboard`)
+- `GET /overview`, `GET /alerts`, `GET /stats/detailed` (admin/manager)
+
+**Écart front / back :** `frontend/app/config/analytics.ts` expose un `AnalyticsService` qui appelle des URLs `/api/analytics/...`. Aucune route `app.use('/api/analytics', …)` n’est enregistrée dans `backend/src/app.js` à ce jour — soit à ajouter côté API, soit à remplacer par des appels vers `/api/dashboard` (et promotions `/analytics/*` déjà existantes sous `/api/promotions`).
+
+### Avis (`/api/reviews`)
+- `GET /:productId`, `POST /`, `PUT /:id/helpful`, `GET /:productId/stats`
+
+### Vendeurs (`/api/sellers`)
+- Public : liste, `GET /slug/:slug`, `GET /:id`
+- Vendeur : `POST /register`, `/me/*` (profil, produits, commandes, gains, payouts)
+- Admin : `/admin/all`, `/admin/payouts`, mises à jour statut / versements
+
+### Paiement (`/api/payment`)
+- `POST /initiate`, webhooks Paystack / CinetPay / Stripe, `GET /status/:orderId`, etc.
+
+### Livraison (`/api/shipping`)
+- `GET /options`, `POST /rates`, `GET /track/:trackingNumber`, `POST /create/:orderId` (admin pour création)
+
+### Santé & utilitaires
+- `GET /health`, `GET /api/db-test` — Contrôle API et base
 
 ---
 
@@ -262,14 +271,10 @@ logodouman/
 - ✅ Animations et transitions
 - ✅ Responsive complet
 
-#### 3. **Administration** (`/admin`)
-- **Dashboard** : Statistiques en temps réel
-- **Produits** : CRUD complet avec images
-- **Catégories** : CRUD avec hiérarchie
-- **Commandes** : Gestion et suivi
-- **Clients** : Profils et historique
-- **Promotions** : Codes promo
-- **Authentification** : Login/Register
+#### 3. **Espaces admin & marketplace**
+- **Admin** : `/admin`, `/admin/login`, `/admin/dashboard`
+- **Vendeur** : `/vendeur`, `/devenir-vendeur`, `/vendeur/dashboard`, `/vendeur/[slug]`
+- **Client** : `/compte/*` (login, commandes, etc.)
 
 ### Composants Clés
 
@@ -294,26 +299,25 @@ logodouman/
 ### Services Docker
 
 1. **Frontend** (`logodouman-frontend`)
-   - Image : Node.js 18 Alpine
-   - Port : 3000/3001
-   - Build : Multi-stage (deps → builder → runner)
-   - Healthcheck : `/health`
+   - Port **hôte** : **3000** (mapping `3000:3000`)
+   - Healthcheck : requête HTTP sur la racine du site
 
 2. **Backend** (`logodouman-backend`)
-   - Image : Node.js 18 Alpine
-   - Port : 4002
-   - Services : PostgreSQL, Redis
-   - Healthcheck : `/health`
+   - Port **hôte** : **4002**
+   - Dépend de PostgreSQL et Redis
+   - Healthcheck : `GET /health`
 
 3. **PostgreSQL** (`logodouman-postgres`)
-   - Version : Latest
-   - Port : 5432
-   - Volume persistant : `postgres_data`
-   - Base : `logodouman`
+   - Image `postgres:16-alpine`
+   - Port **hôte** : **5433** → `5432` dans le conteneur
+   - Volume : `postgres_data`, base `logodouman`
 
-4. **Redis** (optionnel)
-   - Port : 6379
-   - Cache et sessions
+4. **Redis** (`logodouman-redis`)
+   - Port **hôte** : **6380** → `6379` dans le conteneur
+   - Authentification par mot de passe (voir `docker-compose.yml`)
+
+5. **Adminer** (`logodouman-adminer`)
+   - Port **hôte** : **8080**
 
 ### Scripts Docker Disponibles
 
@@ -456,11 +460,12 @@ npm run db:backup        # Sauvegarder la BDD
 
 ### Environnements
 
-#### Développement Local
-- Ports : 3000 (frontend), 4002 (backend)
-- Hot reload activé
-- Logs détaillés
-- Prisma Studio disponible
+#### Développement local
+
+- Ports applicatifs : **3000** (frontend), **4002** (backend)
+- Avec le `docker-compose.yml` du dépôt : PostgreSQL sur **5433**, Redis sur **6380**, Adminer sur **8080**
+- Hot reload activé (hors conteneur ou selon config)
+- Prisma Studio : `npm run db:studio` avec `DATABASE_URL` pointant vers la base accessible depuis l’hôte
 
 #### Production
 - URLs : 
@@ -580,13 +585,18 @@ NEXT_PUBLIC_SITE_URL=https://logodouman.genea.space
 
 ---
 
-## 📚 Documentation Disponible
+## 📚 Documentation disponible
 
-1. **README.md** : Documentation principale
-2. **BOUTIQUE_MODERNE.md** : Guide complet de la boutique
-3. **README-WINDOWS.md** : Guide d'installation Windows
-4. **CLOUDINARY_GUIDE.md** : Guide d'utilisation Cloudinary
-5. **ANALYSE_PROJET.md** : Ce document
+| Fichier | Contenu |
+|---------|---------|
+| [README.md](./README.md) | Démarrage, structure, liens |
+| [MARKETPLACE.md](./MARKETPLACE.md) | Vendeurs, commissions, API `/api/sellers` |
+| [ANALYSE_PROJET.md](./ANALYSE_PROJET.md) | Vue technique (ce document) |
+| [CREDENTIALS.md](./CREDENTIALS.md) | Comptes de test (seed) |
+| [CLOUDINARY_GUIDE.md](./CLOUDINARY_GUIDE.md) | Variables et usage Cloudinary |
+| [BOUTIQUE_MODERNE.md](./BOUTIQUE_MODERNE.md) | UX boutique `/boutique` |
+| [README-WINDOWS.md](./README-WINDOWS.md) | Installation Windows |
+| [AGENTS.md](./AGENTS.md) | Agents Cursor |
 
 ---
 
@@ -609,7 +619,6 @@ Le projet est **prêt pour la production** avec quelques améliorations possible
 
 ---
 
-**Date d'analyse** : 2025-01-27  
-**Analyseur** : AI Assistant  
-**Version projet** : 2.1.0
+**Date de la présente révision** : 2026-05-01 (sync dépôt + écart `/api/analytics`)  
+**Version projet** : 2.1.0 (racine `package.json`)
 

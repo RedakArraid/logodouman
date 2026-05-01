@@ -1,221 +1,121 @@
-# LogoDouman - Plateforme E-commerce 🧡
+# LogoDouman
 
-## 🚀 Site e-commerce moderne avec interface d'administration
+Marketplace e-commerce **full-stack** : catalogue multi-vendeurs, panier, checkout, paiements (selon configuration), espace client, administration et espace vendeur.  
+**Frontend** : Next.js 14 (App Router), TypeScript, Tailwind. **Backend** : Express, Prisma, PostgreSQL, Redis. **Images** : Cloudinary.
 
-### ✨ Fonctionnalités principales
+## Fonctionnalités (aperçu)
 
-#### 🛍️ **Site Client** (`/`)
-- **Design orange harmonieux** avec textes noirs
-- **8 produits** répartis dans 4 catégories
-- **Système de panier** fonctionnel
-- **Recherche en temps réel** 
-- **Filtrage par catégories**
-- **Interface responsive** (mobile/desktop)
-- **Animations** et effets visuels
+| Zone | Contenu principal |
+|------|-------------------|
+| **Public** | Accueil (`/`), boutique (`/boutique`), fiche produit (`/boutique/[id]`), panier, checkout, pages légales, blog, contact |
+| **Client** | Inscription / connexion (`/compte/*`), commandes, demandes de retour |
+| **Vendeur** | Présentation (`/vendeur`), inscription (`/devenir-vendeur`), tableau de bord (`/vendeur/dashboard`), profil public (`/vendeur/[slug]`) |
+| **Admin** | Tableau de bord (`/admin`, `/admin/dashboard`), login (`/admin/login`) |
 
-#### ⚙️ **Interface d'Administration** (`/admin`)
-- **Gestion complète des produits** (CRUD)
-- **Gestion des catégories** (CRUD)
-- **Statistiques en temps réel**
-- **Activation/désactivation** des éléments
-- **Interface intuitive** avec onglets
-- **Synchronisation automatique** avec le site
+Détail marketplace : voir [MARKETPLACE.md](./MARKETPLACE.md).  
+Comptes de test (seed) : voir [CREDENTIALS.md](./CREDENTIALS.md).
 
-### 🛠️ Installation et lancement
+## Prérequis
+
+- Node.js **≥ 18**, npm **≥ 8**
+- Docker **≥ 20** et Docker Compose **v2** (recommandé pour PostgreSQL, Redis, Adminer)
+
+## Installation
 
 ```bash
-# 1. Cloner le projet
 git clone https://github.com/RedakArraid/logodouman.git
-cd logodouman/frontend
-
-# 2. Installer les dépendances
-npm install
-
-# 3. Lancer le serveur de développement
-npm run dev
-
-# 4. Ouvrir dans le navigateur
-http://localhost:3000
+cd logodouman
+npm run install:all
 ```
 
-### 📱 Navigation
+### Variables d’environnement
 
-- **Site principal** : `http://localhost:3000`
-- **Administration** : `http://localhost:3000/admin`
-- **Lien Admin** : Bouton "⚙️ Admin" dans le header du site
+- **Backend** : copier `backend/.env.example` → `backend/.env` (développement hors Docker sur la machine hôte).
+- **Frontend** : copier `frontend/.env.example` → `frontend/.env.local`.
+- **Docker** : copier `backend/.env.docker.example` → `backend/.env.docker` et `frontend/.env.docker.example` → `frontend/.env.docker`, puis renseigner les secrets (Paystack, Stripe, Cloudinary, etc.). Ces fichiers `.env.docker` réels ne doivent pas être versionnés.
 
-### 🎨 Design et Couleurs
+*(Les `.env.example` / `.env.docker.example` du repo servent de modèles documentés.)*
 
-**Palette harmonieuse :**
-- 🧡 **Orange** : Fonds, boutons, accents (`orange-100` à `orange-700`)
-- ⚫ **Noir/Gris** : Textes principaux (`text-black`, `text-gray-600`)
-- ⚪ **Blanc** : Cartes, zones de contenu
+Voir aussi [CLOUDINARY_GUIDE.md](./CLOUDINARY_GUIDE.md) pour les clés médias.
 
-### 📦 Structure du projet
+## Lancer avec Docker (recommandé)
+
+Expose notamment : frontend **3000**, API **4002**, PostgreSQL **5433** → 5432 dans le conteneur, Redis **6380** → 6379, Adminer **8080**.
+
+```bash
+docker compose up -d --build
+# Migrations (si besoin, une fois le backend prêt)
+npm run docker:migrate
+```
+
+- Site : http://localhost:3000  
+- API : http://localhost:4002  
+- Santé API : http://localhost:4002/health  
+- Adminer : http://localhost:8080  
+
+Scripts racine utiles : `npm run docker:logs`, `npm run docker:down`, `npm run db:studio` (Prisma Studio hors conteneur, avec `DATABASE_URL` adapté).
+
+## Lancer en développement local (Node)
+
+1. Démarrer au moins PostgreSQL et Redis (par exemple `docker compose up -d postgres redis`).
+2. Renseigner `backend/.env` : `DATABASE_URL` pointant vers l’hôte (ex. port **5433** si vous utilisez le `docker-compose.yml` du repo), `REDIS_URL` vers **6380** avec le mot de passe configuré dans Compose.
+3. Migrations Prisma :
+
+```bash
+cd backend && npx prisma migrate deploy && cd ..
+```
+
+4. Démarrer les deux services :
+
+```bash
+npm run dev
+```
+
+- Frontend : http://localhost:3000  
+- Backend : http://localhost:4002  
+
+## Structure du dépôt
 
 ```
 logodouman/
-├── frontend/                    # Site Next.js
-│   ├── app/
-│   │   ├── page.tsx            # 🏠 Page principale (site client)
-│   │   ├── admin/
-│   │   │   └── page.tsx        # ⚙️ Interface d'administration
-│   │   ├── contexts/
-│   │   │   └── StoreContext.tsx # 🔄 Gestion d'état globale
-│   │   ├── layout.tsx          # 📄 Layout principal
-│   │   └── styles.css          # 🎨 Styles Tailwind
-│   ├── tailwind.config.js      # ⚙️ Configuration Tailwind
-│   ├── postcss.config.js       # 📦 Configuration PostCSS
-│   └── package.json            # 📋 Dépendances
-├── backend/                     # 🔧 API (à développer)
-├── documentation/               # 📚 Documentation technique
-├── docker-compose.yml          # 🐳 Configuration Docker
-└── README.md                   # 📖 Ce fichier
+├── frontend/          # Next.js 14 — app/, composants, contextes
+├── backend/           # Express — src/routes.*.js, Prisma, scripts/
+├── docker-compose.yml # Stack locale (postgres, redis, backend, frontend, adminer)
+├── docker-compose.prod.yml  # Déploiement (Traefik, etc.) — voir skill infra
+├── package.json       # Scripts orchestration (dev, docker, db, lint, test)
+├── backend/.env.docker.example
+├── frontend/.env.docker.example
+├── AGENTS.md          # Organisation des agents Cursor
+├── MARKETPLACE.md     # Modèle marketplace & API vendeurs
+├── ANALYSE_PROJET.md  # Vue technique détaillée
+├── CREDENTIALS.md     # Identifiants de test (seed)
+├── BOUTIQUE_MODERNE.md    # UX / filtres boutique
+├── README-WINDOWS.md      # Installation sous Windows + Docker
+└── CLOUDINARY_GUIDE.md    # Configuration Cloudinary
 ```
 
-### ⚙️ Interface d'Administration
+## API (préfixe `/api`)
 
-#### **Fonctionnalités Produits :**
-- ✅ **Ajouter** un nouveau produit
-- ✏️ **Modifier** un produit existant
-- 🗑️ **Supprimer** un produit
-- 🔘 **Activer/Désactiver** un produit
-- 📊 **Gestion du stock**
-- 🏷️ **Attribution aux catégories**
+Aperçu des montages dans `backend/src/app.js` :
 
-#### **Fonctionnalités Catégories :**
-- ✅ **Ajouter** une nouvelle catégorie
-- ✏️ **Modifier** une catégorie
-- 🗑️ **Supprimer** une catégorie (si vide)
-- 🔘 **Activer/Désactiver** une catégorie
-- 📈 **Comptage automatique** des produits
+- `/products`, `/categories`, `/auth`, `/dashboard`, `/orders`, `/customers`, `/promotions`, `/reviews`, `/sellers`, `/account`, `/payment`, `/shipping`
 
-#### **Statistiques Temps Réel :**
-- 📦 **Total produits**
-- 🏷️ **Nombre de catégories**
-- 📊 **Stock total**
-- 💰 **Valeur du stock** (en FCFA)
+Le tableau de bord admin s’appuie surtout sur **`/api/dashboard/*`** (voir `routes.dashboard.js`). Le fichier `frontend/app/config/analytics.ts` expose un client qui vise des URLs **`/api/analytics/*`** : elles ne sont **pas** montées dans Express aujourd’hui (préparation / code à brancher ou à aligner sur `/api/dashboard`).
 
-### 🔄 Synchronisation des Données
+Détail des routes et du schéma Prisma : [ANALYSE_PROJET.md](./ANALYSE_PROJET.md).
 
-**Contexte React** (`StoreContext`) :
-- 🔄 **Synchronisation automatique** entre site et admin
-- 💾 **État global partagé**
-- ⚡ **Mises à jour en temps réel**
-- 📊 **Calculs automatiques** (compteurs, totaux)
+## Qualité & build
 
-### 🎯 Utilisation de l'Admin
-
-1. **Accéder à l'admin** : Cliquer sur "⚙️ Admin" dans le header
-2. **Gérer les produits** : Onglet "📦 Gestion des Produits"
-3. **Gérer les catégories** : Onglet "🏷️ Gestion des Catégories"
-4. **Ajouter un élément** : Bouton "➕ Ajouter"
-5. **Modifier** : Bouton "✏️ Modifier" sur chaque élément
-6. **Supprimer** : Bouton "🗑️ Supprimer" (avec confirmation)
-7. **Changer le statut** : Cliquer sur le badge de statut
-
-### 🚀 Technologies utilisées
-
-- **Next.js 14** - Framework React
-- **TypeScript** - Typage statique
-- **Tailwind CSS 3.4** - Styles utilitaires
-- **React Context** - Gestion d'état
-- **React Hooks** - Logique composants
-
-### 🔧 Configuration Tailwind
-
-**Classes orange personnalisées :**
-```javascript
-orange: {
-  50: '#fff7ed',   // Très clair
-  100: '#ffedd5',  // Clair
-  200: '#fed7aa',  // Moyen clair
-  300: '#fdba74',  // Moyen
-  400: '#fb923c',  // Moyen foncé
-  500: '#f97316',  // Standard
-  600: '#ea580c',  // Foncé
-  700: '#c2410c',  // Très foncé
-  800: '#9a3412',  // Ultra foncé
-  900: '#7c2d12',  // Maximum
-}
-```
-
-### 📸 Gestion des images avec Cloudinary
-
-**LogoDouman utilise Cloudinary** pour le stockage et l'optimisation des images :
-
-- ✅ **Stockage cloud** sécurisé (25 GB gratuit)
-- ✅ **CDN mondial** pour performances maximales
-- ✅ **Optimisation automatique** (WebP, compression)
-- ✅ **Transformations** à la volée (resize, crop, etc.)
-
-**Configuration :** Les credentials Cloudinary sont déjà configurés dans `docker-compose.yml`
-
-📚 **Guide complet :** [CLOUDINARY_GUIDE.md](./CLOUDINARY_GUIDE.md)
-
-### 📱 Responsive Design
-
-- **Mobile** : Interface adaptée, navigation simplifiée
-- **Tablet** : Grilles optimisées, touch-friendly
-- **Desktop** : Interface complète, hover effects
-
-### 🔒 Fonctionnalités de Sécurité
-
-- **Confirmations** pour les suppressions
-- **Validation** des formulaires
-- **Vérification** des dépendances (catégories/produits)
-- **États** de chargement et erreurs
-
-### 🎨 Personnalisation
-
-**Modifier les couleurs :**
-1. Éditer `tailwind.config.js`
-2. Changer les valeurs dans la section `colors.orange`
-3. Redémarrer le serveur : `npm run dev`
-
-**Ajouter des champs produits :**
-1. Modifier l'interface `Product` dans `StoreContext.tsx`
-2. Mettre à jour les formulaires dans `admin/page.tsx`
-3. Adapter l'affichage dans `page.tsx`
-
-### 🐛 Dépannage
-
-**Styles ne se chargent pas :**
 ```bash
-rm -rf .next
-npm run dev
+npm run lint          # frontend + backend
+npm run type-check    # frontend TypeScript
+npm run build         # build frontend + backend (selon scripts package)
 ```
 
-**Erreurs TypeScript :**
-```bash
-npm run type-check
-```
+## Déploiement production
 
-**Problèmes de dépendances :**
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### 🚀 Déploiement
-
-**Build de production :**
-```bash
-npm run build
-npm start
-```
-
-**Variables d'environnement :**
-Créer `.env.local` si nécessaire pour la configuration.
-
-### 📧 Support
-
-Pour toute question ou problème :
-- Vérifier la console du navigateur
-- Consulter les logs du serveur
-- Redémarrer le serveur de développement
+Variables et Traefik : voir `.cursor/skills/logodouman-infra/SKILL.md` et `docker-compose.prod.yml`. Ne pas committer `.env.production`.
 
 ---
 
-**🧡 LogoDouman - E-commerce de nouvelle génération** 
-*Créé avec ❤️ pour révolutionner le shopping en ligne*
+**LogoDouman** — documentation revue **1ᵉʳ mai 2026**.

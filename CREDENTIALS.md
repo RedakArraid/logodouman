@@ -1,7 +1,8 @@
-# LogoDouman — Credentials de Test
+# LogoDouman — Credentials de test
 
-> **Note :** Ces identifiants sont générés par le script de seed (`backend/scripts/seed.js`).  
-> Ils sont valides uniquement dans l'environnement de développement/test.
+> **Documentation** : revue **1ᵉʳ mai 2026**. Les mots de passe correspondent au script de seed (`backend/scripts/seed.js`) et aux variables `SEED_*` dans `backend/.env.docker` si vous utilisez Docker.
+
+> **Note :** Ces identifiants sont générés pour l'environnement de développement/test. Ne jamais les réutiliser en production.
 
 ---
 

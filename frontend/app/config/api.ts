@@ -213,11 +213,38 @@ export const apiService = new ApiService();
 export class ProductService {
   static async getAll() {
     try {
-      const response = await apiService.get('/api/products');
+      const response = await apiService.get('/api/products?limit=500');
       return response.products || response || [];
     } catch (error) {
       console.error('Erreur lors du chargement des produits:', error);
       return apiService.getFallbackProducts().products || [];
+    }
+  }
+
+  static async getPaginated(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryId?: string;
+    sortBy?: string;
+    sellerId?: string;
+  } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page)       qs.set('page',       String(params.page));
+    if (params.limit)      qs.set('limit',      String(params.limit));
+    if (params.search)     qs.set('search',     params.search);
+    if (params.categoryId) qs.set('categoryId', params.categoryId);
+    if (params.sortBy)     qs.set('sortBy',     params.sortBy);
+    if (params.sellerId)   qs.set('sellerId',   params.sellerId);
+    try {
+      const response = await apiService.get(`/api/products?${qs.toString()}`);
+      return {
+        products:   response.products || [],
+        pagination: response.pagination || { page: 1, limit: 24, total: 0, totalPages: 1 },
+      };
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+      return { products: [], pagination: { page: 1, limit: 24, total: 0, totalPages: 1 } };
     }
   }
 

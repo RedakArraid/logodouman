@@ -28,6 +28,194 @@ const orderUpdateSchema = z.object({
   notes: z.string().optional()
 });
 
+// Schéma de validation pour le checkout public
+const checkoutSchema = z.object({
+  customer: z.object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string().optional()
+  }),
+  address: z.object({
+    street: z.string().min(1),
+    city: z.string().min(1),
+    postalCode: z.string().default('00000'),
+    country: z.string().default('Côte d\'Ivoire')
+  }),
+  items: z.array(z.object({
+    productId: z.number().int().positive(),
+    quantity: z.number().int().positive(),
+    unitPrice: z.number().positive()
+  })).min(1),
+  totalAmount: z.number().positive(),
+  paymentMethod: z.string().default('cash_on_delivery'),
+  shippingMethod: z.string().optional(),
+  shippingCost: z.number().min(0).optional().default(0),
+  region: z.enum(['africa', 'europe']).optional().default('africa'),
+  notes: z.string().optional()
+});
+
+// POST checkout public (sans authentification requise)
+router.post('/checkout', async (req, res) => {
+  try {
+    const data = checkoutSchema.parse(req.body);
+
+    // Normaliser le paymentMethod (inclut les opérateurs Mobile Money CI)
+    const payMethodMap = {
+      'cash_on_delivery': 'CASH_ON_DELIVERY', 'mobile_money': 'CASH_ON_DELIVERY',
+      'bank_transfer': 'BANK_TRANSFER',
+      'paystack': 'CARD', 'cinetpay': 'CARD', 'stripe': 'CARD',
+      'mtn_momo': 'CARD', 'orange_money': 'CARD', 'wave': 'CARD', 'moov_money': 'CARD',
+    };
+    const normalizedMethod = payMethodMap[data.paymentMethod] || data.paymentMethod.toUpperCase();
+
+    // Upsert le client par email (créer ou trouver)
+    let customer = await db.customer.findUnique({ where: { email: data.customer.email } });
+    if (!customer) {
+      customer = await db.customer.create({
+        data: {
+          email: data.customer.email,
+          firstName: data.customer.firstName,
+          lastName: data.customer.lastName,
+          phone: data.customer.phone,
+          ...(data.address && {
+            address: {
+              create: {
+                street: data.address.street,
+                city: data.address.city,
+                postalCode: data.address.postalCode || '00000',
+                country: data.address.country || 'Côte d\'Ivoire',
+                isDefault: true
+              }
+            }
+          })
+        }
+      });
+    } else if (data.address) {
+      // Mettre à jour l'adresse si elle existe
+      await db.address.upsert({
+        where: { customerId: customer.id },
+        create: { customerId: customer.id, street: data.address.street, city: data.address.city, postalCode: data.address.postalCode || '00000', country: data.address.country || 'Côte d\'Ivoire', isDefault: true },
+        update: { street: data.address.street, city: data.address.city, postalCode: data.address.postalCode || '00000', country: data.address.country || 'Côte d\'Ivoire' }
+      });
+    }
+
+    // Récupérer les produits et vendeurs pour calcul des commissions
+    const productIds = [...new Set(data.items.map(i => i.productId))];
+    const products = await db.product.findMany({
+      where: { id: { in: productIds } },
+      include: { seller: true }
+    });
+    const productMap = Object.fromEntries(products.map(p => [p.id, p]));
+
+    const itemsWithCommission = await Promise.all(data.items.map(async (item) => {
+      const totalPrice = item.unitPrice * item.quantity;
+      const product = productMap[item.productId];
+      let sellerId = null;
+      let commissionAmount = 0;
+      let sellerEarnings = totalPrice;
+
+      if (product?.seller) {
+        sellerId = product.seller.id;
+        const rate = product.seller.commissionRate || 10;
+        commissionAmount = Math.round(totalPrice * (rate / 100));
+        sellerEarnings = totalPrice - commissionAmount;
+      }
+
+      return {
+        productId: item.productId,
+        sellerId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice,
+        commissionAmount,
+        sellerEarnings
+      };
+    }));
+
+    // Créer la commande avec les items
+    const order = await db.order.create({
+      data: {
+        customerId: customer.id,
+        status: 'PENDING',
+        totalAmount: data.totalAmount,
+        notes: data.notes,
+        items: {
+          create: itemsWithCommission
+        }
+      },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
+    });
+
+    // Créer le paiement
+    await db.payment.create({
+      data: {
+        orderId: order.id,
+        amount: data.totalAmount,
+        method: normalizedMethod,
+        status: 'PENDING'
+      }
+    });
+
+    // Délai de livraison estimé selon la région
+    const deliveryDays = data.region === 'europe' ? 7 : 3;
+    const carrier = data.shippingMethod
+      ? data.shippingMethod.split('(')[0].trim()
+      : (data.region === 'europe' ? 'COLISSIMO' : 'LOCAL_ABIDJAN');
+
+    await db.shipping.create({
+      data: {
+        orderId: order.id,
+        method: 'STANDARD',
+        carrier,
+        status: 'PENDING',
+        estimatedDelivery: new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000),
+      }
+    });
+
+    // Mettre à jour le total dépensé par le client
+    await db.customer.update({
+      where: { id: customer.id },
+      data: {
+        totalSpent: { increment: data.totalAmount }
+      }
+    });
+
+    // Envoyer emails de confirmation (async, ne bloque pas la réponse)
+    try {
+      const emailService = require('./services/email.service');
+      const fullCustomer = await db.customer.findUnique({ where: { id: customer.id } });
+      const fullOrder = await db.order.findUnique({
+        where: { id: order.id },
+        include: { items: { include: { product: { select: { name: true } } } } }
+      });
+      emailService.sendOrderConfirmation(fullCustomer, fullOrder).catch(console.error);
+      emailService.sendNewOrderNotification(fullOrder, fullCustomer).catch(console.error);
+    } catch (emailErr) {
+      console.error('[Email] Erreur préparation:', emailErr.message);
+    }
+
+    res.status(201).json({
+      success: true,
+      orderId: order.id,
+      message: 'Commande créée avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors du checkout:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Données invalides', details: error.errors });
+    }
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // GET toutes les commandes avec pagination et filtres
 router.get('/', requireAuth, requireRole(['admin', 'manager']), async (req, res) => {
   try {
@@ -255,6 +443,16 @@ router.put('/:id', requireAuth, requireRole(['admin', 'manager']), async (req, r
         }
       }
     });
+
+    // Email de mise à jour statut
+    if (data.status && order.customer) {
+      try {
+        const emailService = require('./services/email.service');
+        emailService.sendOrderStatusUpdate(order.customer, order, data.status).catch(console.error);
+      } catch (emailErr) {
+        console.error('[Email] Erreur statut:', emailErr.message);
+      }
+    }
 
     res.json(order);
   } catch (error) {

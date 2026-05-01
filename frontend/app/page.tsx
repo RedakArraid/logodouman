@@ -4,7 +4,7 @@ import { useStore } from './contexts/StoreContext';
 import PublicHeader from './components/PublicHeader';
 import PublicFooter from './components/PublicFooter';
 import Link from 'next/link';
-import { 
+import {
   ShoppingBagIcon,
   TruckIcon,
   ShieldCheckIcon,
@@ -30,34 +30,44 @@ export default function HomePage() {
     );
   }
 
+  const categoryEmojis: Record<string, string> = {
+    'electronique': '📱',
+    'mode-accessoires': '👗',
+    'alimentation': '🛒',
+    'beaute-sante': '✨',
+    'maison-decoration': '🏠',
+    'sport-loisirs': '⚽',
+    'artisanat-exotique': '🎨',
+    'services': '🛠️',
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30">
       <PublicHeader />
-      
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 md:py-32 overflow-hidden">
         {/* Pattern Background */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-orange-500/20 px-4 py-2 rounded-full mb-6 backdrop-blur-sm border border-orange-400/30">
               <SparklesIcon className="w-5 h-5 text-orange-400" />
-              <span className="text-orange-200 font-semibold">Collection 2024</span>
+              <span className="text-orange-200 font-semibold">Marketplace N°1 en Afrique de l'Ouest</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Meilleure offre
+              Tout ce dont vous avez besoin,
               <span className="block mt-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent">
-                sac à main premium
+                livré chez vous
               </span>
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-gray-300 mb-10 leading-relaxed">
-              Découvrez notre collection exclusive de sacs à main premium, 
-              alliant élégance, qualité et fonctionnalité pour toutes vos occasions.
+              Découvrez des millions de produits : électronique, mode, alimentation, artisanat et bien plus. Vendeurs vérifiés, paiement sécurisé.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="/boutique"
@@ -83,10 +93,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { icon: TruckIcon, title: 'Livraison Rapide', desc: 'Livraison en 48h à Abidjan' },
-              { icon: ShieldCheckIcon, title: 'Qualité Garantie', desc: 'Produits authentiques et certifiés' },
-              { icon: CreditCardIcon, title: 'Paiement Sécurisé', desc: 'Transactions 100% sécurisées' },
-              { icon: SparklesIcon, title: 'Nouveautés', desc: 'Collections régulièrement renouvelées' }
+              { icon: TruckIcon, title: 'Livraison Rapide', desc: '48h à Abidjan, 5-7j partout en Côte d\'Ivoire' },
+              { icon: ShieldCheckIcon, title: 'Vendeurs Vérifiés', desc: 'Tous nos vendeurs sont contrôlés et approuvés' },
+              { icon: CreditCardIcon, title: 'Paiement Sécurisé', desc: 'Mobile Money, carte bancaire et paiement à la livraison' },
+              { icon: SparklesIcon, title: 'Artisanat Africain', desc: 'Valorisons les créateurs et artisans locaux' }
             ].map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -108,10 +118,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Nos Catégories
+              Explorez nos univers
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Explorez nos collections soigneusement sélectionnées
+              Des milliers de produits dans toutes les catégories
             </p>
           </div>
 
@@ -125,7 +135,7 @@ export default function HomePage() {
                 <div className="flex flex-col h-full">
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors mb-3">
-                      {category.name}
+                      {categoryEmojis[category.slug] ? `${categoryEmojis[category.slug]} ` : ''}{category.name}
                     </h3>
                     <p className="text-gray-600 leading-relaxed">
                       {category.description}
@@ -142,13 +152,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Produits Vedettes */}
+      {/* Produits en vedette */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Produits Vedettes
+                Produits en vedette
               </h2>
               <p className="text-xl text-gray-600">
                 Découvrez nos meilleures ventes
@@ -158,7 +168,7 @@ export default function HomePage() {
               href="/boutique"
               className="hidden md:inline-flex items-center gap-2 text-orange-600 font-bold hover:gap-4 transition-all"
             >
-              Voir tout
+              Voir tous les produits
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
           </div>
@@ -167,7 +177,7 @@ export default function HomePage() {
             {products.map(product => {
               const category = categories.find(c => c.id === product.categoryId);
               const isNew = new Date().getTime() - new Date(product.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
-              
+
               return (
                 <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-100 relative">
                   {isNew && (
@@ -186,7 +196,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => { e.currentTarget.src = `https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&h=500&fit=crop`; }}
                     />
-                    
+
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-4 left-4 right-4">
                         <Link
@@ -234,9 +244,9 @@ export default function HomePage() {
                           Prix TTC
                         </div>
                       </div>
-                      <button 
+                      <button
                         className={`p-3 rounded-xl transition-all ${
-                          (product.stock || 0) === 0 
+                          (product.stock || 0) === 0
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                             : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl hover:scale-110'
                         }`}
@@ -263,14 +273,54 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Devenez vendeur */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-12 text-white grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="text-orange-400 font-bold text-sm uppercase tracking-widest mb-3 block">Pour les entrepreneurs</span>
+              <h2 className="text-4xl font-bold mb-4">Vendez sur LogoDouman</h2>
+              <p className="text-gray-300 text-lg mb-6">
+                Rejoignez notre réseau de vendeurs certifiés. Créez votre boutique en ligne, touchez des milliers de clients en Côte d'Ivoire et en France.
+              </p>
+              <ul className="space-y-2 text-gray-300 mb-8">
+                {['Commission réduite de 10%', 'Tableau de bord vendeur complet', 'Paiements Mobile Money & virement', 'Support dédié aux vendeurs'].map(item => (
+                  <li key={item} className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/vendeur" className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-4 rounded-xl font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg">
+                Ouvrir ma boutique
+                <ArrowRightIcon className="w-5 h-5" />
+              </Link>
+            </div>
+            <div className="hidden md:grid grid-cols-2 gap-4">
+              {[
+                { emoji: '📦', label: 'Tous types de produits' },
+                { emoji: '💳', label: 'Paiements automatiques' },
+                { emoji: '📊', label: 'Statistiques détaillées' },
+                { emoji: '🌍', label: 'Afrique + Europe' },
+              ].map(item => (
+                <div key={item.label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
+                  <div className="text-4xl mb-3">{item.emoji}</div>
+                  <div className="text-sm font-semibold text-gray-200">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="py-20 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Prêt à découvrir votre prochain sac favori ?
+            Rejoignez LogoDouman aujourd'hui
           </h2>
           <p className="text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
-            Rejoignez des milliers de clients satisfaits en Côte d'Ivoire
+            Des milliers de vendeurs, des millions de produits. Afrique de l'Ouest et Europe.
           </p>
           <Link
             href="/boutique"

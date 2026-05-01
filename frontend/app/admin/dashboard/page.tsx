@@ -24,6 +24,7 @@ import SalesCharts from '../components/SalesCharts';
 import AlertsManager from '../components/AlertsManager';
 import SellersManager from '../components/SellersManager';
 import PayoutsManager from '../components/PayoutsManager';
+import UsersManager from '../components/UsersManager';
 import { apiService, CategoryService, SellerService } from '../../config/api';
 
 // Interface Category définie localement
@@ -80,10 +81,16 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [alerts, setAlerts] = useState([]);
-  const [marketplaceStats, setMarketplaceStats] = useState<{ sellersTotal: number; sellersApproved: number; payoutsPending: number } | null>(null);
+  const [marketplaceStats, setMarketplaceStats] = useState<{
+    sellersTotal: number;
+    sellersApproved: number;
+    sellersPending: number;
+    payoutsPending: number;
+    payoutsTotalAmount: number;
+  } | null>(null);
 
   // États pour la navigation
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'vendeurs' | 'payouts'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'customers' | 'vendeurs' | 'payouts' | 'utilisateurs'>('dashboard');
 
   // Vérifier l'authentification au chargement (admin/manager uniquement, pas vendeurs)
   useEffect(() => {
@@ -183,11 +190,15 @@ export default function AdminDashboard() {
       if ((user?.role === 'admin' || user?.role === 'manager') && sellersRes.status === 'fulfilled' && sellersRes.value) {
         const sellers = Array.isArray(sellersRes.value) ? sellersRes.value : (sellersRes.value as any).sellers || [];
         const approved = sellers.filter((s: any) => s.status === 'approved').length;
+        const pending = sellers.filter((s: any) => s.status === 'pending').length;
         const payouts = payoutsRes.status === 'fulfilled' && Array.isArray(payoutsRes.value) ? payoutsRes.value : [];
+        const payoutsTotalAmount = payouts.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
         setMarketplaceStats({
           sellersTotal: sellers.length,
           sellersApproved: approved,
-          payoutsPending: payouts.length
+          sellersPending: pending,
+          payoutsPending: payouts.length,
+          payoutsTotalAmount
         });
       }
       
@@ -322,8 +333,8 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => setActiveSection('payouts')}
                     className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                      activeSection === 'payouts' 
-                        ? 'bg-orange-600 text-white' 
+                      activeSection === 'payouts'
+                        ? 'bg-orange-600 text-white'
                         : 'text-gray-700 hover:bg-orange-50'
                     }`}
                   >
@@ -331,6 +342,19 @@ export default function AdminDashboard() {
                     Versements
                   </button>
                 </>
+              )}
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => setActiveSection('utilisateurs')}
+                  className={`text-left px-4 py-2 rounded-lg transition-colors flex items-center gap-3 ${
+                    activeSection === 'utilisateurs'
+                      ? 'bg-orange-600 text-white'
+                      : 'text-gray-700 hover:bg-orange-50'
+                  }`}
+                >
+                  <UsersIcon className="w-5 h-5" />
+                  Utilisateurs
+                </button>
               )}
             </nav>
           </div>
@@ -398,6 +422,12 @@ export default function AdminDashboard() {
               <PayoutsManager />
             </div>
           )}
+          {activeSection === 'utilisateurs' && (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Gestion des Utilisateurs</h1>
+              <UsersManager token={token!} />
+            </div>
+          )}
         </main>
       </div>
     </AuthGuard>
@@ -418,7 +448,7 @@ function DashboardAnalytics({
   alerts: any[]; 
   loading: boolean;
   onRefresh: () => void;
-  marketplaceStats?: { sellersTotal: number; sellersApproved: number; payoutsPending: number } | null;
+  marketplaceStats?: { sellersTotal: number; sellersApproved: number; sellersPending: number; payoutsPending: number; payoutsTotalAmount: number } | null;
   onNavigatePayouts?: () => void;
   onNavigateVendeurs?: () => void;
 }) {
@@ -463,7 +493,17 @@ function DashboardAnalytics({
       )}
 
       {/* KPIs principaux */}
-      <KPIGrid data={stats} loading={loading} />
+      <KPIGrid
+        data={stats}
+        loading={loading}
+        marketplaceData={marketplaceStats ? {
+          sellersTotal: marketplaceStats.sellersTotal,
+          sellersApproved: marketplaceStats.sellersApproved,
+          sellersPending: marketplaceStats.sellersPending || 0,
+          payoutsPending: marketplaceStats.payoutsPending,
+          payoutsTotalAmount: marketplaceStats.payoutsTotalAmount || 0
+        } : undefined}
+      />
 
       {/* Graphiques de ventes */}
       <SalesCharts data={stats?.sales || null} loading={loading} />

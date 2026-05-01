@@ -21,6 +21,9 @@ const customerRoutes = require('./routes.customers');
 const promotionRoutes = require('./routes.promotions');
 const reviewRoutes = require('./routes.reviews');
 const sellerRoutes = require('./routes.sellers');
+const accountRoutes = require('./routes.account');
+const paymentRoutes = require('./routes.payment');
+const shippingRoutes = require('./routes.shipping');
 
 // Configuration CORS pour Docker et production
 const allowedOrigins = [
@@ -112,6 +115,9 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/sellers', sellerRoutes);
+app.use('/api/account', accountRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 // Routes de test
 app.get('/', (req, res) => {

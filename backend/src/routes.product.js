@@ -71,38 +71,81 @@ router.post('/upload', (req, res) => {
   });
 });
 
-// GET all products
+// GET all products (with pagination, search, filters)
 router.get('/', async (req, res) => {
   try {
-    const { sellerId } = req.query;
-    const where = {};
-    if (sellerId) where.sellerId = sellerId;
+    const {
+      sellerId,
+      page = '1',
+      limit = '24',
+      search,
+      categoryId,
+      sortBy = 'newest',
+      status,
+    } = req.query;
 
-    const products = await db.product.findMany({
-      where,
-      include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true
+    const pageNum  = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 24));
+    const skip     = (pageNum - 1) * limitNum;
+
+    const where = {};
+    if (sellerId)   where.sellerId   = sellerId;
+    // Public endpoint: only show active products unless status is explicitly requested
+    where.status = status || 'active';
+
+    if (search) {
+      const term = search.trim();
+      where.OR = [
+        { name:        { contains: term, mode: 'insensitive' } },
+        { description: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    if (categoryId) {
+      // Collect category + all descendant IDs for hierarchical filtering
+      const allCategories = await db.category.findMany({ select: { id: true, parentId: true } });
+      const descendantIds = new Set([categoryId]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        allCategories.forEach(c => {
+          if (c.parentId && descendantIds.has(c.parentId) && !descendantIds.has(c.id)) {
+            descendantIds.add(c.id);
+            changed = true;
           }
-        },
-        seller: {
-          select: {
-            id: true,
-            storeName: true,
-            slug: true,
-            rating: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
+        });
       }
+      where.categoryId = { in: Array.from(descendantIds) };
+    }
+
+    const orderByMap = {
+      newest:     { createdAt: 'desc' },
+      'price-low':  { price: 'asc' },
+      'price-high': { price: 'desc' },
+      name:       { name: 'asc' },
+      popular:    { createdAt: 'desc' }, // fallback; real popularity needs orderCount
+    };
+    const orderBy = orderByMap[sortBy] || { createdAt: 'desc' };
+
+    const include = {
+      category: { select: { id: true, name: true, slug: true, description: true } },
+      seller:   { select: { id: true, storeName: true, slug: true, rating: true } },
+    };
+
+    const [products, total] = await Promise.all([
+      db.product.findMany({ where, include, orderBy, skip, take: limitNum }),
+      db.product.count({ where }),
+    ]);
+
+    res.json({
+      products,
+      pagination: {
+        page:       pageNum,
+        limit:      limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
-    res.json(products);
   } catch (error) {
     console.error('Erreur lors de la récupération des produits:', error);
     res.status(500).json({ error: 'Erreur serveur' });

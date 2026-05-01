@@ -20,6 +20,8 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
     stock: product?.stock || 0,
     status: product?.status || 'active',
     sku: product?.sku || '',
+    brand: (product as any)?.brand || '',
+    condition: (product as any)?.condition || 'new',
     material: product?.material || '',
     lining: product?.lining || '',
     dimensions: product?.dimensions || '',
@@ -38,6 +40,7 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
   const [styles, setStyles] = useState<string[]>(product?.styles || []);
   const [features, setFeatures] = useState<string[]>(product?.features || []);
   const [colors, setColors] = useState<string[]>(product?.colors || []);
+  const [showExtraFields, setShowExtraFields] = useState(!!(product?.lining || product?.handles));
 
   const handleImageChange = (imageUrl: string) => {
     setFormData(prev => ({
@@ -53,17 +56,19 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Convertir le prix en centimes
     const submitData = {
       ...formData,
       price: Math.round(formData.price * 100),
       weight: formData.weight || undefined,
+      brand: formData.brand || undefined,
+      condition: formData.condition || undefined,
       styles,
       features,
       colors
     };
-    
+
     onSubmit(submitData);
   };
 
@@ -101,6 +106,35 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Marque / Fabricant
+            </label>
+            <input
+              type="text"
+              value={formData.brand}
+              onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="Apple, Samsung, Artisan local..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              État du produit
+            </label>
+            <select
+              value={formData.condition}
+              onChange={(e) => setFormData(prev => ({ ...prev, condition: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              <option value="new">Neuf</option>
+              <option value="used_good">Occasion - Très bon état</option>
+              <option value="used_fair">Occasion - Bon état</option>
+              <option value="refurbished">Reconditionné</option>
+            </select>
           </div>
         </div>
 
@@ -177,44 +211,31 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
         {/* Caractéristiques techniques */}
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Caractéristiques techniques</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Matériau
+                Matériau / Composition
               </label>
               <input
                 type="text"
                 value={formData.material}
                 onChange={(e) => setFormData(prev => ({ ...prev, material: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Cuir PU, Cuir véritable..."
+                placeholder="Cuir, plastique, acier, coton..."
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Doublure
-              </label>
-              <input
-                type="text"
-                value={formData.lining}
-                onChange={(e) => setFormData(prev => ({ ...prev, lining: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Polyester, Coton..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dimensions
+                Dimensions / Taille
               </label>
               <input
                 type="text"
                 value={formData.dimensions}
                 onChange={(e) => setFormData(prev => ({ ...prev, dimensions: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="L x H x P (en cm)"
+                placeholder="L × H × P ou Taille S/M/L/XL"
               />
             </div>
 
@@ -233,10 +254,10 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
           </div>
         </div>
 
-        {/* Styles et caractéristiques */}
+        {/* Variantes & Caractéristiques */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Styles et caractéristiques</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Variantes &amp; Caractéristiques</h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -289,12 +310,147 @@ export default function ProductForm({ product, onSubmit, onCancel }: ProductForm
                 <option value="">Sélectionner...</option>
                 <option value="Quotidien">Quotidien</option>
                 <option value="Travail">Travail</option>
-                <option value="Soirée">Soirée</option>
-                <option value="Sortie">Sortie</option>
-                <option value="Prestige">Prestige</option>
+                <option value="Cérémonie">Cérémonie</option>
+                <option value="Sport">Sport</option>
+                <option value="Voyage">Voyage</option>
+                <option value="Cadeau">Cadeau</option>
               </select>
             </div>
           </div>
+        </div>
+
+        {/* Détails supplémentaires (Mode & Accessoires) */}
+        <div className="border-t pt-6">
+          <button
+            type="button"
+            onClick={() => setShowExtraFields(prev => !prev)}
+            className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors mb-4"
+          >
+            <span className={`inline-block transition-transform ${showExtraFields ? 'rotate-90' : ''}`}>▶</span>
+            Détails supplémentaires (Mode &amp; Accessoires)
+            <span className="text-xs font-normal text-gray-400">{showExtraFields ? '— Masquer' : '— Afficher'}</span>
+          </button>
+
+          {showExtraFields && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Doublure
+                </label>
+                <input
+                  type="text"
+                  value={formData.lining}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lining: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Polyester, Coton..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Revêtement / Traitement
+                </label>
+                <input
+                  type="text"
+                  value={formData.shape}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shape: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Forme du produit..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Motif
+                </label>
+                <input
+                  type="text"
+                  value={formData.pattern}
+                  onChange={(e) => setFormData(prev => ({ ...prev, pattern: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Uni, Rayé, Fleuri..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Décoration
+                </label>
+                <input
+                  type="text"
+                  value={formData.decoration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, decoration: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Broderie, Boucle, Perles..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fermeture
+                </label>
+                <input
+                  type="text"
+                  value={formData.closure}
+                  onChange={(e) => setFormData(prev => ({ ...prev, closure: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Zip, Bouton, Aimant..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Anses / Poignées
+                </label>
+                <input
+                  type="text"
+                  value={formData.handles}
+                  onChange={(e) => setFormData(prev => ({ ...prev, handles: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Courtes, Longues, Bandoulière..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Saison
+                </label>
+                <input
+                  type="text"
+                  value={formData.season}
+                  onChange={(e) => setFormData(prev => ({ ...prev, season: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Toutes saisons, Été, Hiver..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Genre
+                </label>
+                <input
+                  type="text"
+                  value={formData.gender}
+                  onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Femme, Homme, Mixte..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tranche d'âge
+                </label>
+                <input
+                  type="text"
+                  value={formData.ageGroup}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ageGroup: e.target.value }))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Adulte, Enfant, Senior..."
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Boutons */}

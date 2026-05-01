@@ -86,9 +86,9 @@ export default function AdminLogin() {
 
             {/* Informations de test */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Compte de test :</h4>
-              <p className="text-sm text-blue-700">Email: admin@logodouman.com</p>
-              <p className="text-sm text-blue-700">Mot de passe: admin123</p>
+              <h4 className="text-sm font-medium text-blue-800 mb-2">Comptes de test :</h4>
+              <p className="text-sm text-blue-700">Admin : admin@logodouman.com / <strong>Admin@2024!</strong></p>
+              <p className="text-sm text-blue-700">Vendeur : vendeur@logodouman.com / <strong>Vendeur@2024!</strong></p>
             </div>
 
             {/* Champ Email */}

@@ -8,19 +8,27 @@ import PublicFooter from '../../components/PublicFooter';
 import { StarIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { SellerService } from '../../config/api';
+import { useRegion } from '../../contexts/RegionContext';
 
 export default function VendeurProfilPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const [seller, setSeller] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { formatPrice } = useRegion();
 
   useEffect(() => {
     if (!slug) return;
     SellerService.getBySlug(slug)
-      .then(setSeller)
+      .then(data => {
+        setSeller(data);
+        if (data?.storeName) {
+          document.title = `${data.storeName} | LogoDouman`;
+        }
+      })
       .catch(() => setSeller(null))
       .finally(() => setLoading(false));
+    return () => { document.title = 'LogoDouman'; };
   }, [slug]);
 
   if (loading) {
@@ -50,44 +58,92 @@ export default function VendeurProfilPage() {
   const products = seller.products || [];
   const productCount = seller.productCount ?? products.length;
 
+  const memberSince = seller.createdAt
+    ? new Date(seller.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    : null;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PublicHeader />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* En-tête boutique */}
-        <div className="bg-white rounded-2xl shadow border border-orange-100 p-8 mb-8">
-          <div className="flex flex-col md:flex-row gap-6">
-            {seller.logo ? (
-              <img
-                src={seller.logo}
-                alt={seller.storeName}
-                className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                <BuildingStorefrontIcon className="w-12 h-12 text-orange-500" />
-              </div>
-            )}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{seller.storeName}</h1>
-              {seller.description && (
-                <p className="text-gray-600 mb-4">{seller.description}</p>
+
+      {/* Banner */}
+      <div className="relative h-40 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400 overflow-hidden">
+        <div className="absolute inset-0 opacity-20"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+        />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Store header card — overlaps banner */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 mb-8 -mt-12 relative z-10">
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              {seller.logo ? (
+                <img
+                  src={seller.logo}
+                  alt={seller.storeName}
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover border-4 border-white shadow-md"
+                />
+              ) : (
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center border-4 border-white shadow-md">
+                  <BuildingStorefrontIcon className="w-10 h-10 text-orange-500" />
+                </div>
               )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-gray-900">{seller.storeName}</h1>
+                {seller.status === 'approved' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                    Vendeur vérifié
+                  </span>
+                )}
+              </div>
+
+              {seller.description && (
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{seller.description}</p>
+              )}
+
+              {/* Stats row */}
               <div className="flex flex-wrap gap-4 text-sm">
-                <span className="flex items-center gap-1 text-orange-600">
+                {/* Rating */}
+                <div className="flex items-center gap-1.5">
                   {seller.rating > 0 ? (
                     <>
-                      <StarSolidIcon className="w-5 h-5" />
-                      {seller.rating.toFixed(1)} ({seller.reviewCount} avis)
+                      <div className="flex">
+                        {[1,2,3,4,5].map(i => (
+                          <StarSolidIcon
+                            key={i}
+                            className={`w-4 h-4 ${i <= Math.round(seller.rating) ? 'text-amber-400' : 'text-gray-200'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="font-semibold text-gray-900">{seller.rating.toFixed(1)}</span>
+                      <span className="text-gray-500">({seller.reviewCount} avis)</span>
                     </>
                   ) : (
-                    <>
-                      <StarIcon className="w-5 h-5" />
-                      Nouvelle boutique
-                    </>
+                    <span className="text-gray-400 italic text-xs">Aucun avis pour l'instant</span>
                   )}
+                </div>
+
+                <span className="text-gray-300">·</span>
+
+                {/* Product count */}
+                <span className="text-gray-600">
+                  <span className="font-semibold text-gray-900">{productCount}</span>{' '}
+                  produit{productCount > 1 ? 's' : ''}
                 </span>
-                <span className="text-gray-500">{productCount} produit{productCount > 1 ? 's' : ''}</span>
+
+                {memberSince && (
+                  <>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-gray-500">Membre depuis {memberSince}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -96,7 +152,7 @@ export default function VendeurProfilPage() {
         {/* Produits */}
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            Produits de {seller.storeName}
+            Produits de <span className="text-orange-600">{seller.storeName}</span>
           </h2>
           {products.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center text-gray-500">
@@ -112,19 +168,19 @@ export default function VendeurProfilPage() {
                 <Link
                   key={p.id}
                   href={`/boutique/${p.id}`}
-                  className="bg-white rounded-xl overflow-hidden shadow border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all"
+                  className="bg-white rounded-xl overflow-hidden shadow border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all group"
                 >
-                  <div className="aspect-square bg-gray-100">
+                  <div className="aspect-square bg-gray-100 overflow-hidden">
                     <img
                       src={p.image || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400'}
                       alt={p.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2">{p.name}</h3>
-                    <p className="text-orange-600 font-bold mt-1">
-                      {(p.price / 100).toLocaleString('fr-FR')} FCFA
+                    <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm">{p.name}</h3>
+                    <p className="text-orange-600 font-bold mt-1 text-sm">
+                      {formatPrice(p.price)}
                     </p>
                   </div>
                 </Link>

@@ -1,0 +1,145 @@
+# =============================================================================
+# DOCKER COMPOSE - LogoDouman LOCAL
+# =============================================================================
+# Configuration locale sans Traefik ni volumes externes
+# Utilisation:
+#   - Démarrer:       docker compose up -d
+#   - Démarrer+build: docker compose up -d --build
+#   - Arrêter:        docker compose down
+#   - Logs:           docker compose logs -f
+#   - Reset complet:  docker compose down -v && docker compose up -d --build
+#   - Statut:         docker compose ps
+# =============================================================================
+
+services:
+
+  # ===========================================================================
+  # PostgreSQL 16
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: logodouman-postgres
+    environment:
+      POSTGRES_DB: logodouman
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: logodouman123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d logodouman"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - logodouman_network
+
+  # ===========================================================================
+  # Redis 7
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: logodouman-redis
+    command: redis-server --requirepass redis123 --appendonly yes
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - logodouman_network
+
+  # ===========================================================================
+  # Backend Express.js + Prisma
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: logodouman-backend
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "4002:4002"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 90s
+    networks:
+      - logodouman_network
+
+  # ===========================================================================
+  # Frontend Next.js 14
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: logodouman-frontend
+    env_file:
+      - ./frontend/.env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - logodouman_network
+
+  # ===========================================================================
+  # Adminer - Interface web pour PostgreSQL
+  # ===========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: logodouman-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - logodouman_network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  logodouman_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes (locaux, pas external)
+# =============================================================================
+volumes:
+  postgres_data:
+  redis_data:

@@ -77,6 +77,8 @@ model Product {
   stock       Int      @default(0)
   status      String   @default("active")
   sku         String?
+  brand       String?  // Marque du produit
+  condition   String?  @default("new") // new, used, refurbished
   material    String?
   lining      String?
   coating     String?
@@ -122,8 +124,9 @@ model Customer {
   firstName     String
   lastName      String
   phone         String?
-  address       Address?
-  orders        Order[]
+  address        Address?
+  orders         Order[]
+  returnRequests ReturnRequest[]
   totalSpent    Float    @default(0)
   loyaltyPoints Int      @default(0)
   status        String   @default("active")
@@ -158,9 +161,10 @@ model Order {
   shippingCost  Float       @default(0)
   discountAmount Float      @default(0)
   promotionCode String?
-  items         OrderItem[]
-  payment       Payment?
-  shipping      Shipping?
+  items          OrderItem[]
+  payment        Payment?
+  shipping       Shipping?
+  returnRequests ReturnRequest[]
   notes         String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -347,5 +351,23 @@ model SellerPayout {
   updatedAt   DateTime @updatedAt
 
   @@index([sellerId])
+  @@index([status])
+}
+
+// ===== DEMANDES DE RETOUR =====
+model ReturnRequest {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reason      String
+  description String?
+  status      String   @default("pending") // pending, approved, rejected, completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([customerId])
   @@index([status])
 }

@@ -62,7 +62,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002'}/:path*`,
+        destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4002'}/api/:path*`,
       },
     ];
   },
@@ -128,7 +128,6 @@ const nextConfig = {
   
   // 🔧 Configuration expérimentale
   experimental: {
-    // Optimisations pour Docker
     outputFileTracingRoot: '/app',
     serverComponentsExternalPackages: ['@prisma/client'],
   },

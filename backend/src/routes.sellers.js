@@ -457,13 +457,28 @@ router.put('/admin/:id/approve', requireAuth, requireAdmin, async (req, res) => 
   try {
     const data = approveSellerSchema.parse(req.body);
 
+    const { status } = data;
+
     const seller = await db.seller.update({
       where: { id: req.params.id },
       data: {
         status: data.status,
         ...(data.commissionRate !== undefined && { commissionRate: data.commissionRate })
+      },
+      include: {
+        user: { select: { email: true, name: true } }
       }
     });
+
+    // Email de notification au vendeur
+    try {
+      const emailService = require('./services/email.service');
+      if (seller.user && (status === 'approved')) {
+        emailService.sendSellerApproval(seller.user.email, seller.user.name || seller.storeName, seller.storeName).catch(console.error);
+      }
+    } catch (emailErr) {
+      console.error('[Email] Erreur notification vendeur:', emailErr.message);
+    }
 
     res.json(seller);
   } catch (error) {

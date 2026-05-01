@@ -1,21 +1,77 @@
-'use client';
-
 import Link from 'next/link';
-import { useStore } from '../contexts/StoreContext';
-import { 
+import {
   MapPinIcon,
   EnvelopeIcon,
   PhoneIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
 
-export default function PublicFooter() {
-  const { getActiveCategories, isHydrated } = useStore();
-  const categories = isHydrated ? getActiveCategories() : [];
+const CATEGORY_GROUPS = [
+  {
+    label: 'Électronique & High-Tech',
+    slug: 'electronique',
+    items: [
+      { label: 'Smartphones', slug: 'smartphones' },
+      { label: 'Laptops & Tablettes', slug: 'laptops-tablettes' },
+      { label: 'TV · Son · Photo', slug: 'tv-son-photo' },
+    ],
+  },
+  {
+    label: 'Mode & Beauté',
+    slug: 'mode-accessoires',
+    items: [
+      { label: 'Vêtements Femme', slug: 'vetements-femme' },
+      { label: 'Vêtements Homme', slug: 'vetements-homme' },
+      { label: 'Chaussures', slug: 'chaussures' },
+      { label: 'Sacs & Maroquinerie', slug: 'sacs-maroquinerie' },
+      { label: 'Beauté & Santé', slug: 'beaute-sante' },
+    ],
+  },
+  {
+    label: 'Maison & Cuisine',
+    slug: 'maison-decoration',
+    items: [
+      { label: 'Maison & Décoration', slug: 'maison-decoration' },
+      { label: 'Alimentation & Épicerie', slug: 'alimentation' },
+      { label: 'Épices & Condiments', slug: 'epices-condiments' },
+      { label: 'Boissons & Jus', slug: 'boissons-jus' },
+    ],
+  },
+  {
+    label: 'Artisanat Africain',
+    slug: 'artisanat-exotique',
+    items: [
+      { label: 'Art africain', slug: 'art-africain' },
+      { label: 'Bijoux africains', slug: 'bijoux-accessoires' },
+      { label: 'Artisanat local', slug: 'artisanat-exotique' },
+    ],
+  },
+  {
+    label: 'Sport & Services',
+    slug: 'sport-loisirs',
+    items: [
+      { label: 'Sport & Loisirs', slug: 'sport-loisirs' },
+      { label: 'Services', slug: 'services' },
+    ],
+  },
+];
 
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
+    >
+      <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all flex-shrink-0" />
+      {children}
+    </Link>
+  );
+}
+
+export default function PublicFooter() {
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Newsletter Section */}
+      {/* Newsletter */}
       <div className="border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="max-w-2xl mx-auto text-center">
@@ -39,80 +95,48 @@ export default function PublicFooter() {
         </div>
       </div>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          
-          {/* À Propos */}
+      {/* Main footer */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+
+        {/* Top row: About · Nav · Contact */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* À propos */}
           <div>
             <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
               LogoDouman
             </h3>
             <p className="text-gray-400 leading-relaxed mb-4">
-              Votre destination pour les sacs à main de qualité premium en Côte d'Ivoire.
+              La marketplace de référence en Afrique de l&apos;Ouest. Électronique, mode, alimentation, artisanat et bien plus.
             </p>
             <div className="flex items-center gap-2 text-gray-400">
               <HeartIcon className="w-5 h-5 text-orange-500" />
-              <span className="text-sm">Made in Côte d'Ivoire</span>
+              <span className="text-sm">Afrique de l&apos;Ouest &amp; France</span>
             </div>
           </div>
-          
+
           {/* Navigation */}
           <div>
             <h4 className="font-semibold mb-4 text-orange-400 text-lg">Navigation</h4>
             <ul className="space-y-3">
-              <li>
-                <Link href="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
-                  Accueil
-                </Link>
-              </li>
-              <li>
-                <Link href="/boutique" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
-                  Boutique
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Catégories */}
-          <div>
-            <h4 className="font-semibold mb-4 text-orange-400 text-lg">Catégories</h4>
-            <ul className="space-y-3">
-              {categories.map(category => (
-                <li key={category.id}>
-                  <Link
-                    href={`/boutique?category=${category.slug}`}
-                    className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
-                  >
-                    <span className="w-1 h-1 bg-orange-500 rounded-full group-hover:w-2 transition-all"></span>
-                    {category.name}
-                  </Link>
-                </li>
+              {[
+                { href: '/', label: 'Accueil' },
+                { href: '/boutique', label: 'Boutique' },
+                { href: '/blog', label: 'Blog' },
+                { href: '/contact', label: 'Contact' },
+                { href: '/devenir-vendeur', label: 'Devenir vendeur' },
+              ].map(({ href, label }) => (
+                <li key={href}><FooterLink href={href}>{label}</FooterLink></li>
               ))}
             </ul>
           </div>
-          
+
           {/* Contact */}
           <div>
             <h4 className="font-semibold mb-4 text-orange-400 text-lg">Contact</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-gray-400">
                 <MapPinIcon className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                <span>Abidjan, Côte d'Ivoire</span>
+                <span>Abidjan, Côte d&apos;Ivoire</span>
               </li>
               <li className="flex items-start gap-3 text-gray-400">
                 <EnvelopeIcon className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -127,23 +151,46 @@ export default function PublicFooter() {
             </ul>
           </div>
         </div>
-        
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-10 pt-8">
+
+        {/* Category groups */}
+        <div className="border-t border-gray-800 pt-10">
+          <h4 className="font-semibold mb-6 text-orange-400 text-lg">Nos catégories</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {CATEGORY_GROUPS.map((group) => (
+              <div key={group.slug}>
+                <Link
+                  href={`/boutique?category=${group.slug}`}
+                  className="block text-sm font-semibold text-white mb-3 hover:text-orange-400 transition-colors"
+                >
+                  {group.label}
+                </Link>
+                <ul className="space-y-2">
+                  {group.items.map((item) => (
+                    <li key={item.slug}>
+                      <Link
+                        href={`/boutique?category=${item.slug}`}
+                        className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm">
               &copy; {new Date().getFullYear()} LogoDouman. Tous droits réservés.
             </p>
             <div className="flex gap-6 text-sm text-gray-400">
-              <Link href="/mentions-legales" className="hover:text-white transition-colors">
-                Mentions légales
-              </Link>
-              <Link href="/cgv" className="hover:text-white transition-colors">
-                CGV
-              </Link>
-              <Link href="/confidentialite" className="hover:text-white transition-colors">
-                Confidentialité
-              </Link>
+              <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
+              <Link href="/cgv" className="hover:text-white transition-colors">CGV</Link>
+              <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
             </div>
           </div>
         </div>

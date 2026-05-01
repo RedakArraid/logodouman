@@ -5,6 +5,7 @@ import { useCart, CartItem } from '../contexts/CartContext';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShoppingBagIcon,
   TrashIcon,
@@ -17,10 +18,10 @@ import {
 export default function CartPage() {
   const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   const handleCheckout = () => {
-    // TODO: Implémenter le processus de paiement
-    alert('Fonctionnalité de paiement à venir !');
+    router.push('/checkout');
   };
 
   if (items.length === 0) {

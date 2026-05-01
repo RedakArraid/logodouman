@@ -21,6 +21,8 @@ dist/
 .env.test.local
 .env.production.local
 .env.production
+.env.docker
+**/.env.docker
 
 # Logs
 npm-debug.log*
